@@ -1,5 +1,5 @@
 # FlyByWire
-Code to run example from FlyByWire
+Code to run simulation examples from FlyByWire
 
 Requirements:
 MPT 3.+ toolbox: http://people.ee.ethz.ch/~mpt/3/
