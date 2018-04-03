@@ -1,4 +1,4 @@
-function [negative_rob,xx,yy,zz] = case_robustness(var,optParams)
+function [negative_rob,xx,yy,zz] = Mission_Robustness(var,optParams)
 %%
 import casadi.*
 type_of = isfloat(var); %0 for casadi
@@ -9,16 +9,6 @@ v = var(numel(var)/2+1:end);
 
 % assign intervals for goals
 N_per_T = optParams.N_per_T;
-
-%delivery times
-I_package = 1:1+(H/2)*N_per_T;
-I_base = 1+1+(H/2)*N_per_T:H*N_per_T+1;
-
-% surveillance times
-I_first_s1 = 1:(H/4)*N_per_T+1;
-I_first_s2 = 1+(H/4)*N_per_T+1:(H/2)*N_per_T+1;
-I_second_s1 = 1+(H/2)*N_per_T+1:(3*H/4)*N_per_T+1;
-I_second_s2 = 1+(3*H/4)*N_per_T+1:H*N_per_T+1;
 
 % 50 works for 2 drones
 C = 10.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
@@ -35,6 +25,7 @@ da = optParams.da;
 M1 = optParams.M1;
 T = optParams.T;
 Clen = optParams.Clen;
+
 if(type_of) %if double input
     temp_x = zeros(optParams.N_drones, numel(dT));
     temp_y = zeros(optParams.N_drones, numel(dT));
@@ -45,7 +36,9 @@ if(type_of) %if double input
     rho_unsafe = zeros(optParams.N_drones,1);
     rho_goal = zeros(optParams.N_drones,1);
     mutual_distances = zeros(numel(dT)*optParams.H_formula+1,1);
-    dists = zeros(nchoosek(optParams.N_drones,2),1);
+    if (optParams.N_drones > 1)
+        dists = zeros(nchoosek(optParams.N_drones,2),1);
+    end
 else
     temp_x = MX.sym('temp_x',optParams.N_drones, numel(dT));
     temp_y = MX.sym('temp_y',optParams.N_drones, numel(dT));
@@ -56,14 +49,18 @@ else
     rho_unsafe = MX.sym('r_u',optParams.N_drones,1);
     rho_goal = MX.sym('r_u',optParams.N_drones,1);
     mutual_distances = MX.sym('msep',numel(dT)*optParams.H_formula+1,1);
-    dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+    if (optParams.N_drones > 1)
+        dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+    end
 end
 
+% For each Drone
 for d = 1:optParams.N_drones
     %init posns
     xx(1,d) = w(1+(d-1)*Clen);
     yy(1,d) = w(2+(d-1)*Clen);
     zz(1,d) = w(3+(d-1)*Clen);
+    
     %get all sampled splines
     for k = 1:optParams.H_formula
         
@@ -103,54 +100,40 @@ for d = 1:optParams.N_drones
         
     end
     
-    %unsafe set
+    % Robusteness unsafe set
     rho_unsafe(d) = robustness_unsafe(xx,yy,zz,d,optParams);
     
     
-    % odd drones are package deliverers
-    if(rem(d,2)==1)
-        g = 1;
-        rho_deliver = robustness_goal(xx,yy,zz,d,g,I_package,optParams);
-        g = 4;
-        rho_base = robustness_goal(xx,yy,zz,d,g,I_base,optParams);
-        rho_goal(d) = SmoothMin([rho_deliver;rho_base],C);
+    % Robustness Get to goal in interval
+    i = 1;
+    rho = [];
+    drone_goals = optParams.drone_goals{d};
+    if size(drone_goals)
+        for g = drone_goals(:,1)'
+            I = 1+drone_goals(i,2)*N_per_T:1+drone_goals(i,3)*N_per_T;
+            rho = [rho; robustness_goal(xx,yy,zz,d,g,I,optParams)];
+            i = i + 1;
+        end
     end
+    rho_goal(d) = SmoothMin(rho,C);
     
-    %even drones are patrollers
-%    I_first_s1 = 1:(H/4)*N_per_T+1;
-%I_first_s2 = 1+(H/4)*N_per_T+1:(H/2)*N_per_T+1;
-%I_second_s1 = 1+(H/2)*N_per_T+1:(3*H/4)*N_per_T+1;
-%I_second_s2 = 1+(3*H/4)*N_per_T+1:H*N_per_T+1;
-    if(rem(d,2)==0)
-        g = 2;
-        rho_first_s1 =  robustness_goal(xx,yy,zz,d,g,I_first_s1,optParams);
-        g = 3;
-        rho_first_s2 =  robustness_goal(xx,yy,zz,d,g,I_first_s2,optParams);
-        g = 2;
-        rho_second_s1 =  robustness_goal(xx,yy,zz,d,g,I_second_s1,optParams);
-        g = 3;
-        rho_second_s2 =  robustness_goal(xx,yy,zz,d,g,I_second_s2,optParams);
-        rho_goal(d) = SmoothMin([rho_first_s1;rho_first_s2;...
-            rho_second_s1;rho_second_s2],C);
-    end   
 end
 
 % pairwise distances
-combos = nchoosek(1:optParams.N_drones,2);
-for p = 1:size(combos,1)
-    for k=1:size(xx,1) %for all time steps
-    pa = [xx(k,combos(p,1));yy(k,combos(p,1));zz(k,combos(p,1))];
-    pb = [xx(k,combos(p,2));yy(k,combos(p,2));zz(k,combos(p,2))];
-    mutual_distances(k) = norm(pa-pb,2)-optParams.d_min;
-%     if(mutual_distances(k)<0)
-%        keyboard; 
-%     end
-    %   d  
-%     dx(:,p) = xx(:,combos(p,1))-xx(:,combos(p,2));
-%     dy(:,p) = yy(:,combos(p,1))-yy(:,combos(p,2));
-%     dz(:,p) = zz(:,combos(p,1))-zz(:,combos(p,2));
+if (optParams.N_drones > 1)
+    combos = nchoosek(1:optParams.N_drones,2);
+    for p = 1:size(combos,1)
+        for k=1:size(xx,1) %for all time steps
+            pa = [xx(k,combos(p,1));yy(k,combos(p,1));zz(k,combos(p,1))];
+            pb = [xx(k,combos(p,2));yy(k,combos(p,2));zz(k,combos(p,2))];
+            mutual_distances(k) = norm(pa-pb,2)-optParams.d_min;
+        end
+        dists(p) = SmoothMin(mutual_distances,C2);
     end
-    dists(p) = SmoothMin(mutual_distances,C2);
 end
 
-negative_rob = -SmoothMin([rho_unsafe;rho_goal;dists],C);
+if (optParams.N_drones > 1)
+    negative_rob = -SmoothMin([rho_unsafe;rho_goal;dists],C);
+else
+    negative_rob = -SmoothMin([rho_unsafe;rho_goal],C);
+end

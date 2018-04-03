@@ -3,6 +3,6 @@
 boundary -5.0 -5.0 0.0 5.0 5.0 5.0
 
 # block = unsafe
-# lowx lowy lowz upperx uppery upperz R G B
+# lowx lowy lowz 
 block  -2.0  -2.0  0.0  -1.0  -1.0  2.5 255   0   0
 block  1.0  1.0  0.0  2.0  2.0  4 254   0   0
