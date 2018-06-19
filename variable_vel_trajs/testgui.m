@@ -22,7 +22,7 @@ function varargout = testgui(varargin)
 
 % Edit the above text to modify the response to help testgui
 
-% Last Modified by GUIDE v2.5 15-Feb-2018 21:43:52
+% Last Modified by GUIDE v2.5 22-Feb-2018 02:01:32
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -71,6 +71,13 @@ goal.poly = Polyhedron('lb',goal.lb,'ub',goal.ub);
 
 handles.goal = goal;
 
+
+% Populate Table with Defaults
+table  = findobj('Tag','mission_table');
+d = {'Drone1','[0 0 0]','[1 1 1]', '6'};
+set(table, 'Data', d);
+
+
 % Draw environment
 updateEnvironment(handles);
 
@@ -85,11 +92,6 @@ if strcmp(get(hObject,'Visible'),'off')
     grid on; grid minor;
     axis([-1 1 -1 1]);
 end
-
-
-
-% UIWAIT makes testgui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
 
 
 % --- Outputs from this function are returned to the command line.
@@ -108,20 +110,24 @@ function plan_Mission_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Import Casadi ... need a better way to do this
 import casadi.*
 
 N_drones = handles.Ndrones;
-H_formula = 9; %H seconds %works -with 5 for d=2, but use small C and then recompute. 6 is ok
+H_formula = 6; %H seconds %works -with 5 for d=2, but use small C and then recompute. 6 is ok
 
 goal = handles.goal;
 obs = handles.obs;
 map = handles.map;
+
 h = 1/20; %mpc
+
 [sys_d,~] = quad_lin_dynamics(0.03,h); %get discrete quad dyn at 20Hz,
 
 % Backend Stuff
 disp('Formulating in Casadi...');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %initialize tracker variables
 T = 1; %1s duration of motion
 M1 = (1/2*T^5)*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
@@ -148,6 +154,8 @@ K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
     (30/2)*(t_prime^2)/(T^3);
 optParams.K2_tprime = K2_tprime;
 %p0 = [-1.5;0;1]; %init position
+
+% Some predefined Initial Position
 p0 = zeros(3,N_drones);
 p0(:,1) = [-1.25;-1.25;1.75]; %init position
 p0(:,2) = [1.25;-1.25;1.75];
@@ -354,6 +362,7 @@ guidata(hObject, handles);
 function updateEnvironment(handles)
 % Plot the environment on the figure
 
+% Bring up desired axes
 axes(handles.Sim3D_axes);
 cla;
 
@@ -482,26 +491,6 @@ if ~isequal(file, 0)
     open(file);
 end
 
-% --------------------------------------------------------------------
-function PrintMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to PrintMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-printdlg(handles.figure1)
-
-% --------------------------------------------------------------------
-function CloseMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to CloseMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-selection = questdlg(['Close ' get(handles.figure1,'Name') '?'],...
-                     ['Close ' get(handles.figure1,'Name') '...'],...
-                     'Yes','No','Yes');
-if strcmp(selection,'No')
-    return;
-end
-
-delete(handles.figure1)
 
 
 function edit1_Callback(hObject, eventdata, handles)
@@ -601,7 +590,7 @@ function Goal_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of Goal as a double
 
 goal_stop = (get(hObject,'String'));
-goal_stop = str2num(goal_stop{1})
+goal_stop = str2num(goal_stop);
 
 goal.stop = goal_stop'; %map end point
 goal.ds = .25; %thickeness
@@ -628,23 +617,58 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on slider movement.
-function slider1_Callback(hObject, eventdata, handles)
-% hObject    handle to slider1 (see GCBO)
+
+function edit3_Callback(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+% Hints: get(hObject,'String') returns contents of edit3 as text
+%        str2double(get(hObject,'String')) returns contents of edit3 as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function slider1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to slider1 (see GCBO)
+function edit3_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
-% Hint: slider controls usually have a light gray background.
-if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor',[.9 .9 .9]);
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on selection change in mission_summary_list.
+function mission_summary_list_Callback(hObject, eventdata, handles)
+% hObject    handle to mission_summary_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns mission_summary_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from mission_summary_list
+
+
+% --- Executes during object creation, after setting all properties.
+function mission_summary_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to mission_summary_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: listbox controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+set(hObject,'String',{'Maps_mrsl/empty_map.txt', 'hello'});
+
+
+
+
+% --- Executes on button press in pushbutton3.
+function pushbutton3_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton3 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

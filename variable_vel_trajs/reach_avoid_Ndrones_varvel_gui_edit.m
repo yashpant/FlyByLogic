@@ -1,62 +1,43 @@
-%% start case study multiquads with eth tracker++
+%% start reach avoid example for a multiquads with eth tracker++
 
-
-clc;close all;
-N_drones = 3;
+close all;
+N_drones = 2;
 import casadi.*
 addpath('../MiscFunctions');
 addpath('../Maps_mrsl');
-addpath('subfunctions');
-%%
+
+%% Mission Setup
+
+% Init Message print out
 disp('Initializing...');
-map_name = 'Maps_mrsl/map1.txt';
-H_formula = 20; %H seconds %works with 5 for d=2, but use small C and then recompute. 6 is ok
+
+% Select pre-defined map
+map_name = 'Maps_mrsl/map0.txt';
+
+% Set mission horizon
+H_formula = 6; %H seconds %works with 5 for d=2, but use small C and then recompute. 6 is ok
+
+% get obstacle from map
 obs = getObstacles(map_name);
 map = load_map(map_name, .5, .5, 0);
+
 close all;
 plot_path(map, []);
 close all;
-
-goal{1}.stop = [4;4;2]; %delivery goal
-goal{1}.ds = 0.5; %thickeness
-goal{1}.lb = goal{1}.stop-goal{1}.ds;
-goal{1}.ub = goal{1}.stop+goal{1}.ds;
-
-goal{2}.stop = [0;0;4]; %surveliance one
-goal{2}.ds = 0.5; %thickeness
-goal{2}.lb = goal{2}.stop-goal{2}.ds;
-goal{2}.ub = goal{2}.stop+goal{2}.ds;
-
-goal{3}.stop = [4;-4;2]; %surveliance two
-goal{3}.ds = 0.5; %thickeness
-goal{3}.lb = goal{3}.stop-goal{3}.ds;
-goal{3}.ub = goal{3}.stop+goal{3}.ds;
-
-goal{4}.stop = [-4;4;1]; %delivery base
-goal{4}.ds = 0.5; %thickeness
-goal{4}.lb = goal{4}.stop-goal{4}.ds;
-goal{4}.ub = goal{4}.stop+goal{4}.ds;
-
-
-col{1} = 'blue';col{2} = 'yellow';
-col{3} = 'yellow'; col{4} = 'green';
-if(1)
-for i = 1:4
-goal{i}.poly = Polyhedron('lb',goal{i}.lb,'ub',goal{i}.ub);
+goal.stop = [1.75;1.75;0.75]; %map end point
+goal.ds = .25; %thickeness
+goal.lb = goal.stop-goal.ds;goal.ub = goal.stop+goal.ds;
+goal.poly = Polyhedron('lb',goal.lb,'ub',goal.ub);
 hold on;
-plot(goal{i}.poly,'Color',col{i},'alpha',0.5);
-end
+plot(goal.poly,'Color','green','alpha',0.5);
 hold on;
-for i = 1:size(obs,1)
-plot(obs{i}.shape,'Color','red','alpha',0.5);
-hold on;
-end
+plot(obs{1}.shape,'Color','red','alpha',0.5);
 data = map.boundary;
 marg = 0.25;
 axis ([data(1)-marg data(4)+marg data(2)-marg data(5)+marg data(3)-marg data(6)+marg]);
 clear data;
-end
 h = 1/20; %dt
+
 
 %% traj gen constraints in casadi
 disp('Formulating in Casadi...');
@@ -67,9 +48,9 @@ M1 = (1/2*T^5)*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
 
 %tracker limits
 max_per_axis = 1;
-max_vel = 1; 
+max_vel = .751; 
 optParams.max_vel = max_vel;
-max_accl = 2;
+max_accl = 1;
 optParams.max_accl = max_accl;
 % from vel constraints on pf
 K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T);
@@ -82,22 +63,18 @@ tp1 = (-bb+sqrt(bb^2-4*aa*cc))/(2*aa);
 tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
 t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); %pick the right one
 K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
-    (30/2)*(t_prime^1)/(T^3);
+    (30/2)*(t_prime^2)/(T^3);
 optParams.K2_tprime = K2_tprime;
 %p0 = [-1.5;0;1]; %init position
 p0 = zeros(3,N_drones);
-p0(:,1) = [-4;-4;3]; %init position
-p0(:,2) = [-4;4;2];
-
-p0(:,3) = [1.25;0;4];
-p0(:,4) = [-1.25;0;4];
-
+p0(:,1) = [-1.25;-1.25;1.75]; %init position
+p0(:,2) = [1.25;-1.25;1.75];
+p0(:,3) = [1.25;1.25;1.75];
+p0(:,4) = [0;1.25;1.75];
 p0(:,5) = [1.25;0;1.75];
 p0(:,6) = [0;-1.25;1.75];
-
-p0(:,7) = [2.25;2;1.5];
-p0(:,8) = [2;-2.25;1.75];
-
+p0(:,7) = [-0.5;1.25;1.5];
+p0(:,8) = [1.75;1.75;1.75];
 p0(:,9) = [1;1;1.75];
 p0(:,10)= [0;0;1.75];
 p0(:,11) = [-1.25;-1.0;1.75];
@@ -117,7 +94,7 @@ da = 0;
 dv = 0; %start and stop from/at rest
 
 Nsteps = H_formula*(T/h);
-
+Nsteps = round(Nsteps);
 % Populate optParams structure
 optParams.T = T;
 optParams.M1 = M1;
@@ -130,21 +107,12 @@ optParams.obs = obs;
 optParams.map = map;
 optParams.max_vel = max_vel;
 optParams.max_per_axis = max_per_axis;
-
-for i = 1:numel(obs)
-optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
-optParams.obs_ub_N{i} = repmat(obs{i}.ub,Nsteps+1,1);
-end
-for i = 1:numel(goal)
-optParams.goal{i}.goal_lb_N = repmat(goal{i}.lb',Nsteps+1,1);
-optParams.goal{i}.goal_ub_N = repmat(goal{i}.ub',Nsteps+1,1);
-end
-
+optParams.obs_lb_N = repmat(obs{1}.lb,Nsteps+1,1);
+optParams.obs_ub_N = repmat(obs{1}.ub,Nsteps+1,1);
+optParams.goal.goal_lb_N = repmat(goal.lb',Nsteps+1,1);
+optParams.goal.goal_ub_N = repmat(goal.ub',Nsteps+1,1);
 optParams.N_drones = N_drones;
-optParams.d_min = 0.1; %min mutual separation
-Clen = 3*(H_formula+1);
-optParams.Clen = Clen;
-%%  casadi shit
+optParams.d_min = 0.2; %min mutual separation
 p_0 = MX.sym('p_0',3,1);
 v_0 = MX.sym('v_0',3,1);
 
@@ -157,7 +125,8 @@ ubv = [];
 g = [];
 lbg = [];
 ubg = [];
-
+Clen = 3*(H_formula+1);
+optParams.Clen = Clen;
 for d = 1:N_drones
     lbw = [lbw;p0(:,d)];
     ubw = [ubw;p0(:,d)];
@@ -225,10 +194,15 @@ for d = 1:N_drones
          
         
         % overall bounds on movement
-        lbw = [lbw;map.boundary(1:3)'];
+        lbw = [lbw;map.boundary(1:3)'+[0;0;.45]];
         ubw = [ubw;map.boundary(4:6)'];
+        if(k<H_formula)
         lbv = [lbv;-ones(3,1)*max_vel];
         ubv = [ubv;+ones(3,1)*max_vel];
+        else
+           lbv = [lbv;zeros(3,1)]; 
+           ubv = [ubv;zeros(3,1)];
+        end
     end
 end
 
@@ -243,38 +217,36 @@ var_lb = [lbw;lbv];
 opts.ipopt.print_level = 5;
 opts.print_time = false;
 opts.expand = false;
-options = struct('ipopt', struct('tol', 1e-6, 'acceptable_tol', 1e-4, 'max_iter', 5000, 'linear_solver', 'mumps','hessian_approximation','limited-memory',...
+options = struct('ipopt', struct('tol', 1e-6, 'acceptable_tol', 1e-4, 'max_iter', 2000, 'linear_solver', 'mumps','hessian_approximation','limited-memory',...
     'print_level',0)); %mumps, limited-memory
 options.print_time = false;
-prob = struct('f', case_robustness(var,optParams), 'x', var, 'g', g);
+prob = struct('f', cost_reach_avoid_Ndrones_varvel(var,optParams), 'x', var, 'g', g);
 solver = nlpsol('solver', 'ipopt', prob,options);
 
-%% get init sol
+%% 
 disp('Getting init solution...');
 w0 = [];
 vv0 = [];
 for i = 1:N_drones
-    mission_type = 1*rem(i,2) + 2*(rem(i,2)==0);
-    [temp, tempv] = case_get_init_waypoints([p0(:,i);v0(:,i)],optParams,mission_type);
+    [temp tempv] = get_init_waypoints_nonzerovel([p0(:,i);v0(:,i)],optParams);
     if(sum(isnan(temp))>0 || sum(isnan(tempv))>0)
-        disp('init infeasible');
-        keyboard;
+    disp('init infeasible');
+    keyboard;
     end
     w0 = [w0;temp];
     vv0 = [vv0;tempv];
     pos0{i} = reshape(temp,3,H_formula+1);
     vel0{i} = reshape(tempv,3,H_formula+1);
-    
-%     if(i)
-%         hold on;
-%         plot3(pos0{i}(1,:),pos0{i}(2,:),pos0{i}(3,:),'-.');
-%     end
+    %hold all;
+    %plot3(pos0{i}(1,:),pos0{i}(2,:),pos0{i}(3,:),'-.');
 end
 
 var0 = [w0;vv0];
- case_robustness(var0,optParams)
 
-%% solve the nlp
+%enforce stop
+var_lb(end-2:end) = zeros(3,1);
+var_ub(end-2:end) = zeros(3,1);
+%% Solve the NLP
 disp('Solving...');
 tic;
 sol = solver('x0',var0,'lbx', var_lb, 'ubx', var_ub,...
@@ -300,16 +272,20 @@ if(1)
     mar{10} = 'k*';
     mar{11} = 'b*';
     mar{12} = 'c*';
-    for d = 1:optParams.N_drones
+    mar{13} = 'k*';
+    mar{14} = 'g*';
+    mar{15} = 'r*';
+    mar{16} = 'b*';
+    for d = 1:N_drones
         
         waypoints{d} = reshape(w_opt(1+(d-1)*(H_formula+1)*3:...
             (d)*(H_formula+1)*3),3,H_formula+1);
         hold all;
-        %plot3(waypoints{d}(1,:),waypoints{d}(2,:),waypoints{d}(3,:),mar{d});
+        plot3(waypoints{d}(1,:),waypoints{d}(2,:),waypoints{d}(3,:),mar{d});
         
         
     end
-    [negative_rob,xx,yy,zz] = case_robustness(w_opt,optParams);
+    [negative_rob,xx,yy,zz] = cost_reach_avoid_Ndrones_varvel(w_opt,optParams);
     
     pause(0.1);
     mar{1} = 'ko';
@@ -322,8 +298,12 @@ if(1)
     mar{8} = 'rp';
     mar{9} = 'g^';
     mar{10}= 'md';
-    mar{11} = 'b*';
-    mar{12} = 'y*';
+    mar{11} = 'b>';
+    mar{12} = 'y<';
+    mar{13} = 'kd';
+    mar{14} = 'go';
+    mar{15} = 'r^';
+    mar{16} = 'bp';
     for d = 1:optParams.N_drones
         
         hold on;plot3(xx(:,d),yy(:,d),zz(:,d),'-.','linewidth',0.25);
