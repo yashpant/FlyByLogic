@@ -82,7 +82,7 @@ tp1 = (-bb+sqrt(bb^2-4*aa*cc))/(2*aa);
 tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
 t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); %pick the right one
 K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
-    (30/2)*(t_prime^2)/(T^3);
+    (30/2)*(t_prime^1)/(T^3);
 optParams.K2_tprime = K2_tprime;
 %p0 = [-1.5;0;1]; %init position
 p0 = zeros(3,N_drones);
