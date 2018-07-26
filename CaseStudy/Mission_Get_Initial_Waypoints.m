@@ -26,8 +26,8 @@ vv(1,:) == init_state(4:6)';
 
 for i = 2:H+1
     
-    ww(i,:)>=optParams.map.boundary(1:3);
-    ww(i,:)<=optParams.map.boundary(4:6);
+    ww(i,:)>=init_state(1:3)';%optParams.map.boundary(1:3);
+    ww(i,:)<=init_state(1:3)';%optParams.map.boundary(4:6);
     for j = 1:3
         
         al = M1(1,:)*[(ww(i,j)-ww(i-1,j)-vv(i-1,j)*T);0;da];
@@ -50,8 +50,8 @@ for i = 2:H+1
 end
 
 % if(mission_type==1) %package delivery
-%     ww(ceil((H+1)/2),:) == optParams.goal{1}.stop' + (0.2*rand(3,1)' - 0.1)*randomize; %deliver
-%     ww(H+1,:) ==  optParams.goal{4}.stop' + (0.2*rand(3,1)' - 0.1)*randomize; % go to base
+%     ww(ceil((H+1)/2),:) == optParams.goal{1}.stop'; %deliver
+%     ww(H+1,:) ==  optParams.goal{1}.stop'; % go to base
 % else
 %     ww(ceil(1*(H+1)/4),:) == optParams.goal{2}.stop' + (0.2*rand(3,1)' - 0.1)*randomize;
 %     ww(ceil(3*(H+1)/4),:) == optParams.goal{2}.stop' + (0.2*rand(3,1)' - 0.1)*randomize;

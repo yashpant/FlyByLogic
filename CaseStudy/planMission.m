@@ -10,13 +10,13 @@ N_drones = missionHandle.N_drones;
 d_min = missionHandle.d_min;
 
 % How long is the mission?
-H_formula = missionHandle.Horizon; %H seconds %works with 5 for d=2, but use small C and then recompute. 6 is ok
+H_formula = missionHandle.Horizon;
 
 % Set Sampling Time 
 h = missionHandle.sampling_time;
 
 % Separation of waypoints
-T = missionHandle.t_step; %1s duration of motion
+T = 1; %1s duration of motion
 
 % Map and obstacles
 map = missionHandle.map;

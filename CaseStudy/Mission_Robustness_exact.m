@@ -1,4 +1,4 @@
-function [negative_rob,xx,yy,zz] = Mission_Robustness(var,optParams)
+function [negative_rob,xx,yy,zz] = Mission_Robustness_exact(var,optParams)
 %%
 import casadi.*
 type_of = isfloat(var); %0 for casadi
@@ -101,7 +101,7 @@ for d = 1:optParams.N_drones
     end
     
     % Robusteness unsafe set
-    rho_unsafe(d) = robustness_unsafe(xx,yy,zz,d,optParams);
+    rho_unsafe(d) = robustness_unsafe_exact(xx,yy,zz,d,optParams);
     
     
     % Robustness Get to goal in interval
@@ -111,11 +111,11 @@ for d = 1:optParams.N_drones
     if size(drone_goals)
         for g = drone_goals(:,1)'
             I = 1+drone_goals(i,2)*N_per_T:1+drone_goals(i,3)*N_per_T;
-            rho = [rho; robustness_goal(xx,yy,zz,d,g,I,optParams)];
+            rho = [rho; robustness_goal_exact(xx,yy,zz,d,g,I,optParams)];
             i = i + 1;
         end
     end
-    rho_goal(d) = SmoothMin(rho,C);
+    rho_goal(d) = min(rho);
     
 end
 
@@ -128,12 +128,12 @@ if (optParams.N_drones > 1)
             pb = [xx(k,combos(p,2));yy(k,combos(p,2));zz(k,combos(p,2))];
             mutual_distances(k) = norm(pa-pb,2)-optParams.d_min;
         end
-        dists(p) = SmoothMin(mutual_distances,C2);
+        dists(p) = min(mutual_distances);
     end
 end
 
 if (optParams.N_drones > 1)
-    negative_rob = -SmoothMin([rho_unsafe;rho_goal;dists],C);
+    negative_rob = -min([rho_unsafe;rho_goal;dists]);
 else
-    negative_rob = -SmoothMin([rho_unsafe;rho_goal],C);
+    negative_rob = -min([rho_unsafe;rho_goal]);
 end

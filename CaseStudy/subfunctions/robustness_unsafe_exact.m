@@ -1,4 +1,4 @@
-function [ rho_unsafe ] =robustness_unsafe(xx,yy,zz,d,optParams)
+function [ rho_unsafe ] =robustness_unsafe_exact(xx,yy,zz,d,optParams)
 %%
 import casadi.*
 type_of = optParams.type_of;
@@ -34,10 +34,8 @@ for j = 1:size(optParams.obs,1)
     for i = 1:numel(rho_lb_xx)
         temp_vec = [rho_lb_xx(i) rho_ub_xx(i) rho_lb_yy(i) rho_ub_yy(i) ...
             rho_lb_zz(i) rho_ub_zz(i)];
-        temp(i,j) = SmoothMin(temp_vec,C); 
+        temp(i,j) = min(temp_vec);    
     end
-    temp_unsafe(j) = SmoothMin(-temp(:,j),C);
+    temp_unsafe(j) = min(-temp(:,j));
 end
-rho_unsafe = SmoothMin(temp_unsafe,C);  
-
-
+rho_unsafe = min(temp_unsafe);  
