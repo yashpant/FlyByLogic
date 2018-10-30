@@ -1,6 +1,6 @@
 %% start reach avoid example for a multiquads with eth tracker++
 
-close all;
+close all;clear all;
 %clc;close all;
 N_drones = 2;
 import casadi.*
