@@ -6,8 +6,10 @@ if(type_of)
         temp = zeros(size(xx,1),size(optParams.obs,1));
         temp_unsafe = zeros(size(optParams.obs,1),1);
     else
-        temp = MX.sym('temp',size(xx,1),size(optParams.obs,1));
-        temp_unsafe = MX.sym('temp_unsafe',size(optParams.obs,1),1);
+        %temp = MX.sym('temp',size(xx,1),size(optParams.obs,1));
+        %temp_unsafe = MX.sym('temp_unsafe',size(optParams.obs,1),1);
+        temp = MX.zeros(size(xx,1),size(optParams.obs,1));
+        temp_unsafe = MX.zeros(size(optParams.obs,1),1);
 end
 
 C = optParams.C;

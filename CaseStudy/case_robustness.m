@@ -47,16 +47,44 @@ if(type_of) %if double input
     mutual_distances = zeros(numel(dT)*optParams.H_formula+1,1);
     dists = zeros(nchoosek(optParams.N_drones,2),1);
 else
-    temp_x = MX.sym('temp_x',optParams.N_drones, numel(dT));
-    temp_y = MX.sym('temp_y',optParams.N_drones, numel(dT));
-    temp_z = MX.sym('temp_z',optParams.N_drones, numel(dT));
-    xx = MX.sym('xx',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    yy = MX.sym('yy',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    zz = MX.sym('zz',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    rho_unsafe = MX.sym('r_u',optParams.N_drones,1);
-    rho_goal = MX.sym('r_u',optParams.N_drones,1);
-    mutual_distances = MX.sym('msep',numel(dT)*optParams.H_formula+1,1);
-    dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+%     temp_x = MX.sym('temp_x',optParams.N_drones, numel(dT));
+%     temp_y = MX.sym('temp_y',optParams.N_drones, numel(dT));
+%     temp_z = MX.sym('temp_z',optParams.N_drones, numel(dT));
+%     xx = MX.sym('xx',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+%     yy = MX.sym('yy',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+%     zz = MX.sym('zz',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+%     rho_unsafe = MX.sym('r_u',optParams.N_drones,1);
+%     rho_goal = MX.sym('r_u',optParams.N_drones,1);
+%     mutual_distances = MX.sym('msep',numel(dT)*optParams.H_formula+1,1);
+%     dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+%temp_x = MX.sym('temp_x',optParams.N_drones, numel(dT));
+    temp_x = MX.zeros(optParams.N_drones, numel(dT));
+    
+    %temp_y = MX.sym('temp_y',optParams.N_drones, numel(dT));
+    temp_y = MX.zeros(optParams.N_drones, numel(dT));
+    
+    %temp_z = MX.sym('temp_z',optParams.N_drones, numel(dT));
+    temp_z = MX.zeros(optParams.N_drones, numel(dT));
+    
+%     xx = MX.sym('xx',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+xx = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);    
+% yy = MX.sym('yy',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+yy = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);    
+% zz = MX.sym('zz',numel(dT)*optParams.H_formula+1,optParams.N_drones);
+zz = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);
+
+    %rho_unsafe = MX.sym('r_u',optParams.N_drones,1);
+    rho_unsafe = MX.zeros(optParams.N_drones,1);
+    %rho_goal = MX.sym('r_u',optParams.N_drones,1);
+    rho_goal = MX.zeros(optParams.N_drones,1);
+    %mutual_distances = MX.sym('msep',numel(dT)*optParams.H_formula+1,1);
+    mutual_distances = MX.zeros(numel(dT)*optParams.H_formula+1,1);
+    if(optParams.N_drones>1)
+%     dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+    dists = MX.zeros(nchoosek(optParams.N_drones,2),1);
+    end
+
+
 end
 
 for d = 1:optParams.N_drones
