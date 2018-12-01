@@ -479,7 +479,7 @@ function dminEditText_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of dminEditText as text
 %        str2double(get(hObject,'String')) returns contents of dminEditText as a double
 
-handles.myhandle.d_min_tag = str2num(hObject.String);
+handles.myhandle.d_min = str2num(hObject.String);
 disp("Updated Drone Minimum Separation");
 guidata(hObject, handles)
 

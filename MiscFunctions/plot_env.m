@@ -27,7 +27,7 @@ end
 
 % Set bounds with margin m
 b = map.boundary;
-m = 0.25;
+m = 2.5;
 
 axis ([b(1)-m b(4)+m b(2)-m b(5)+m b(3)-m b(6)+m]);
 

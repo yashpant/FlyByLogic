@@ -16,7 +16,7 @@ H_formula = missionHandle.Horizon;
 h = missionHandle.sampling_time;
 
 % Separation of waypoints
-T = 1; %1s duration of motion
+T = 5; %1s duration of motion
 
 % Map and obstacles
 map = missionHandle.map;
@@ -33,15 +33,15 @@ init_pos = missionHandle.init_pos;
 
 % Initialize Tracker Variables
 
-M1 = (1/2*T^5)*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
+M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
 
 % Tracker limits
 max_per_axis = 1;
-max_vel = 1; 
-max_accl = 2;
+max_vel = 5; 
+max_accl = 10;
 
 % From vel constraints on pf
-K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T);
+K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T)
 
 % From accl constraints on pf
 aa =  (90/4)*(1/T^5);
@@ -55,7 +55,7 @@ tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
 t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); 
 
 K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
-    (30/2)*(t_prime)/(T^3);
+    (30/2)*(t_prime)/(T^3)
 
 % Set Initial Random Initial Positions
 if(0) 
@@ -212,9 +212,9 @@ opts.ipopt.print_level = 5;
 opts.print_time = false;
 opts.expand = false;
 options = struct('ipopt', struct('tol', 1e-6, 'acceptable_tol', 1e-4,...
-                    'max_iter', 5000, 'linear_solver', 'mumps',...
+                    'max_iter', 5, 'linear_solver', 'mumps',...
                     'hessian_approximation','limited-memory',...
-                    'print_level',0));
+                    'print_level',5));
                 
 options.print_time = false;
 prob = struct('f', Mission_Robustness(var,optParams), 'x', var, 'g', g);
@@ -248,6 +248,7 @@ for i = 1:N_drones
 end
 
 var0 = [w0;vv0];
+optParams.var0 = var0;
 Init_waypoints_rob = Mission_Robustness(var0,optParams);
 toc
 %% solve the nlp

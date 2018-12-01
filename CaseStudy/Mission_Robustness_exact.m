@@ -11,9 +11,9 @@ v = var(numel(var)/2+1:end);
 N_per_T = optParams.N_per_T;
 
 % 50 works for 2 drones
-C = 10.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
-C1 =10.0; %const for smooth max %20 works for 10 drones, det init points
-C2 =5.0; %5 makes no numerical instblty in 12 drones
+C = 2.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
+C1 =2.0; %const for smooth max %20 works for 10 drones, det init points
+C2 =2.0; %5 makes no numerical instblty in 12 drones
 optParams.C = C;
 optParams.C1 = C1;
 optParams.C2 = C2;
@@ -84,19 +84,19 @@ for d = 1:optParams.N_drones
             (gam_x/6)*dT.^3   + w((k-1)*3+1+(d-1)*Clen) + ...
             dT*v((k-1)*3+1+(d-1)*Clen); %fix w points
         
-        xx(2+(k-1)*20:k*20+1,d) = temp_x(d,:)';
+        xx(2+(k-1)*N_per_T:k*N_per_T+1,d) = temp_x(d,:)';
         
         temp_y(d,:) = (al_y/120)*dT.^5 + (be_y/24)*dT.^4 + ...
             (gam_y/6)*dT.^3   + w((k-1)*3+2+(d-1)*Clen) + ...
             dT*v((k-1)*3+2+(d-1)*Clen); % fix w points
         
-        yy(2+(k-1)*20:k*20+1,d) = temp_y(d,:)';
+        yy(2+(k-1)*N_per_T:k*N_per_T+1,d) = temp_y(d,:)';
         
         temp_z(d,:) = (al_z/120)*dT.^5 + (be_z/24)*dT.^4 + ...
             (gam_z/6)*dT.^3   + w((k-1)*3+3+(d-1)*Clen) + ...
             dT*v((k-1)*3+3+(d-1)*Clen); %fix w points
         
-        zz(2+(k-1)*20:k*20+1,d) = temp_z(d,:)'; 
+        zz(2+(k-1)*N_per_T:k*N_per_T+1,d) = temp_z(d,:)'; 
         
     end
     
@@ -110,7 +110,7 @@ for d = 1:optParams.N_drones
     drone_goals = optParams.drone_goals{d};
     if size(drone_goals)
         for g = drone_goals(:,1)'
-            I = 1+drone_goals(i,2)*N_per_T:1+drone_goals(i,3)*N_per_T;
+            I = 1+drone_goals(i,2)*N_per_T/T:1+drone_goals(i,3)*N_per_T/T;
             rho = [rho; robustness_goal_exact(xx,yy,zz,d,g,I,optParams)];
             i = i + 1;
         end
@@ -131,6 +131,9 @@ if (optParams.N_drones > 1)
         dists(p) = min(mutual_distances);
     end
 end
+
+sep_rob = min(dists)
+d_min = optParams.d_min
 
 if (optParams.N_drones > 1)
     negative_rob = -min([rho_unsafe;rho_goal;dists]);

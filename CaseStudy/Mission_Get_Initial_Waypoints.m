@@ -19,7 +19,7 @@ cvx_begin quiet
 variable ww(H+1,3)
 variable vv(H+1,3)
 
-minimise sum(ww(:,1)) %sum(ww(:,1)) makes opt fast, 0 works too
+minimise 0 %sum(ww(:,1)) makes opt fast, 0 works too
 
 ww(1,:) == init_state(1:3)'; %#ok<*NODEF,*EQEFF,*VUNUS>
 vv(1,:) == init_state(4:6)';
