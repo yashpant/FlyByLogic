@@ -1,7 +1,7 @@
 %% start case study multiquads with eth tracker++
 
 
-clc;close all;
+clc;close all;clear all;
 N_drones = 3;
 import casadi.*
 addpath('../MiscFunctions');

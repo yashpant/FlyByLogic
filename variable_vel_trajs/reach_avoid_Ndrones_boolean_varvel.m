@@ -3,7 +3,7 @@
 
 %
 %clc;
-close all;
+close all;clear all;
 N_drones = 2;
 import casadi.*
 addpath('../MiscFunctions');

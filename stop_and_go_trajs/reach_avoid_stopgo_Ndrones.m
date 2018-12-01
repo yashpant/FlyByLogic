@@ -1,7 +1,7 @@
 %% start reach avoid example for a multiquads with eth tracker++
 
 
-clc;close all;
+clc;close all;clear all;
 N_drones = 2;
 import casadi.*
 addpath('../MiscFunctions');

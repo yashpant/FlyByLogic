@@ -8,8 +8,11 @@ if(type_of)
         temp = zeros(numel(I),1);
         temp_unsafe = zeros(size(optParams.obs,1),1);
     else
-        temp = MX.sym('temp',numel(I),1);
-        temp_unsafe = MX.sym('temp_unsafe',size(optParams.obs,1),1);
+%         temp = MX.sym('temp',numel(I),1);
+%         temp_unsafe = MX.sym('temp_unsafe',size(optParams.obs,1),1);
+temp = MX.zeros(numel(I),1);
+        temp_unsafe = MX.zeros(size(optParams.obs,1),1);
+
 end
 
 
