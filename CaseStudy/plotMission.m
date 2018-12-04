@@ -24,10 +24,10 @@ optParams
 
 size(cpp_out)
 size(w_opt)
-[negative_rob, xx,yy,zz] = Mission_Robustness_exact(cpp_out,optParams);
+[negative_rob, xx,yy,zz] = Mission_Robustness_exact(w_opt,optParams);
 rob = -negative_rob;
 
-set(handles.missionRob_data, 'String', sprintf("%.4f",rob));
+set(handles.missionRob_data, 'String', sprintf('%.4f',rob));
 
 mar{1} = 'ko';
 mar{2} = 'go';
@@ -75,7 +75,7 @@ for t = 1:size(xx,1)
         hold on;
         gc(d) = plot3(xx(t,d),yy(t,d),zz(t,d),mar{d},'MarkerSize',20, 'MarkerFaceColor', col{d});
     end
-    set(time_print, 'String', sprintf("%.3f",(t-1)*optParams.sampling_time));
+    set(time_print, 'String', sprintf('%.3f',(t-1)*optParams.sampling_time));
     t_ = toc;
 %     pause(0.02);
     pause(optParams.sampling_time - t_);

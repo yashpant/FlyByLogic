@@ -63,7 +63,7 @@ handles.output = hObject;
      
 % Populate Table with Defaults
 Mission_Table  = findobj('Tag','Mission_Table_tag');
-d = {'Drone1','[0,0,5]','[0 5; 5 10]'};
+d = {'Drone1','[2,2,6]','[0 5; 5 10]'};
 set(Mission_Table, 'Data', d);
 cur_cols = get(Mission_Table, 'ColumnName');
 set(Mission_Table, 'ColumnName', cur_cols(1:3))
@@ -131,10 +131,10 @@ handles = updateEnvironment(handles);
 view(handles.disp_axes, -60, 10);
 axis vis3d;
 
-set(handles.missionStatus_data,'String', "Not Ready");
-set(handles.missionnameEditText, 'String', "default");
-handles.myhandle.mission_name = "default";
-set(handles.missionLoaded_data, 'String', "default");
+set(handles.missionStatus_data,'String', 'Not Ready'); %"" causes errors?
+set(handles.missionnameEditText, 'String', 'default');
+handles.myhandle.mission_name = 'default';
+set(handles.missionLoaded_data, 'String', 'default');
 
 handles.missionToLoad = '../Missions/default.mat';
 handles %#ok<NOPRT>
@@ -174,7 +174,7 @@ for i = 1:t_size(1)
     if (size(dat{i,2}))
         init_pos(:,i) = str2num(dat{i,2})';
     else
-        disp("Please specify all initial positions")
+        disp('Please specify all initial positions')
     end
     
     for j = 1:t_size(2)-2
@@ -192,7 +192,7 @@ for i = 1:t_size(1)
     end
 end
 
-disp("Updated Mission Table");
+disp('Updated Mission Table');
 handles.myhandle.init_pos = init_pos;
 handles.myhandle.drone_goals = drone_goals;
 
@@ -404,7 +404,7 @@ for i = 1:t_size(1)
     goal{i}.col = 'green';
 end
 
-disp("Updated goals");
+disp('Updated goals');
 handles.myhandle.goal = goal;
 
 handles = updateEnvironment(handles);
@@ -454,7 +454,7 @@ function horizonEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of horizonEditText as a double
 
 handles.myhandle.Horizon = str2num(hObject.String);
-disp("Updated Mission Horizon");
+disp('Updated Mission Horizon');
 guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -480,7 +480,7 @@ function dminEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of dminEditText as a double
 
 handles.myhandle.d_min = str2num(hObject.String);
-disp("Updated Drone Minimum Separation");
+disp('Updated Drone Minimum Separation');
 guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -506,7 +506,7 @@ function samplingEditText_Callback(hObject, eventdata, handles)
 %        str2double(get(hObject,'String')) returns contents of samplingEditText as a double
 
 handles.myhandle.sampling_time = str2num(hObject.String);
-disp("Updated Sampling time");
+disp('Updated Sampling time');
 guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
@@ -565,7 +565,7 @@ end
 
 set(Obstacle_Table, 'Data', new_table);
 
-disp("Updated External Obstacles");
+disp('Updated External Obstacles');
 handles.myhandle.ext_blocks = ext_blocks;
 handles = updateEnvironment(handles);
 
@@ -606,7 +606,7 @@ function cleanButton_Callback(hObject, eventdata, handles)
 % Bring up desired axes
 axes(handles.disp_axes);
 cla;
-disp("Map Cleaned");
+disp('Map Cleaned');
 
 handles = updateEnvironment(handles);
 
@@ -622,11 +622,11 @@ function plotButton_Callback(hObject, eventdata, handles)
 % Bring up desired axes
 axes(handles.disp_axes);
 cla;
-disp("Map Cleaned");
+disp('Map Cleaned');
 
 handles = updateEnvironment(handles);
 
-disp("Plotting Mission.....");
+disp('Plotting Mission...');
 handles.myhandle.rob = plotMission(handles);
 
 guidata(hObject, handles)
@@ -639,14 +639,14 @@ function planButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-set(handles.missionStatus_data, 'String', "Not Ready");
+set(handles.missionStatus_data, 'String', 'Not Ready');
 
 % Do routine error checks
 % Check all 
-disp("Planning Mission....");
+disp('Planning Mission....');
 [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
 Plan_Time = handles.myhandle.time_taken
-set(handles.missionStatus_data, 'String', "Ready");
+set(handles.missionStatus_data, 'String', 'Ready');
 
 guidata(hObject, handles)
 
@@ -760,7 +760,7 @@ function uploadButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-set(handles.missionStatus_data,'String', "Not Ready");
+set(handles.missionStatus_data,'String', 'Not Ready');
 set(handles.missionLoaded_data, 'String', handles.myhandle.mission_name);
 
 % --- Executes on selection change in loadPopupmenu.

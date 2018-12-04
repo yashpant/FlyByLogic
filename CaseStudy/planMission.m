@@ -16,7 +16,7 @@ H_formula = missionHandle.Horizon;
 h = missionHandle.sampling_time;
 
 % Separation of waypoints
-T = 5; %1s duration of motion
+T = 1; %1s duration of motion
 
 % Map and obstacles
 map = missionHandle.map;
@@ -36,9 +36,9 @@ init_pos = missionHandle.init_pos;
 M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
 
 % Tracker limits
-max_per_axis = 1;
-max_vel = 5; 
-max_accl = 10;
+max_per_axis = 2;
+max_vel = 2; 
+max_accl = 4;
 
 % From vel constraints on pf
 K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T)
@@ -212,7 +212,7 @@ opts.ipopt.print_level = 5;
 opts.print_time = false;
 opts.expand = false;
 options = struct('ipopt', struct('tol', 1e-6, 'acceptable_tol', 1e-4,...
-                    'max_iter', 5, 'linear_solver', 'mumps',...
+                    'max_iter', 5000, 'linear_solver', 'mumps',...
                     'hessian_approximation','limited-memory',...
                     'print_level',5));
                 

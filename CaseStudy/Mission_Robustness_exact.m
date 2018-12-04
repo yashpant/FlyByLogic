@@ -130,10 +130,12 @@ if (optParams.N_drones > 1)
         end
         dists(p) = min(mutual_distances);
     end
+else
+    dists = [];
 end
 
-sep_rob = min(dists)
-d_min = optParams.d_min
+% sep_rob = min(dists);
+% d_min = optParams.d_min;
 
 if (optParams.N_drones > 1)
     negative_rob = -min([rho_unsafe;rho_goal;dists]);

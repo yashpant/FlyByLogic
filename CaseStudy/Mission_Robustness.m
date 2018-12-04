@@ -10,10 +10,10 @@ v = var(numel(var)/2+1:end);
 % assign intervals for goals
 N_per_T = optParams.N_per_T;
 optParams
-% 50 works for 2 drones
-C = 2.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
-C1 =2.0; %const for smooth max %20 works for 10 drones, det init points
-C2 =2.0; %5 makes no numerical instblty in 12 drones
+% 50 works for 2 drones, 2 works for rural mission
+C = 30.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
+C1 =30.0; %const for smooth max %20 works for 10 drones, det init points
+C2 =30.0; %5 makes no numerical instblty in 12 drones
 optParams.C = C;
 optParams.C1 = C1;
 optParams.C2 = C2;
@@ -40,17 +40,17 @@ if(type_of) %if double input
         dists = zeros(nchoosek(optParams.N_drones,2),1);
     end
 else
-    temp_x = MX.sym('temp_x',optParams.N_drones, numel(dT));
-    temp_y = MX.sym('temp_y',optParams.N_drones, numel(dT));
-    temp_z = MX.sym('temp_z',optParams.N_drones, numel(dT));
-    xx = MX.sym('xx',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    yy = MX.sym('yy',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    zz = MX.sym('zz',numel(dT)*optParams.H_formula+1,optParams.N_drones);
-    rho_unsafe = MX.sym('r_u',optParams.N_drones,1);
-    rho_goal = MX.sym('r_u',optParams.N_drones,1);
-    mutual_distances = MX.sym('msep',numel(dT)*optParams.H_formula+1,1);
+    temp_x = MX.zeros(optParams.N_drones, numel(dT));
+    temp_y = MX.zeros(optParams.N_drones, numel(dT));
+    temp_z = MX.zeros(optParams.N_drones, numel(dT));
+    xx = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);
+    yy = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);
+    zz = MX.zeros(numel(dT)*optParams.H_formula+1,optParams.N_drones);
+    rho_unsafe = MX.zeros(optParams.N_drones,1);
+    rho_goal = MX.zeros(optParams.N_drones,1);
+    mutual_distances = MX.zeros(numel(dT)*optParams.H_formula+1,1);
     if (optParams.N_drones > 1)
-        dists = MX.sym('mdist',nchoosek(optParams.N_drones,2),1);
+        dists = MX.zeros(nchoosek(optParams.N_drones,2),1);
     end
 end
 
