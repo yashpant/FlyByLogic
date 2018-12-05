@@ -16,7 +16,8 @@ H_formula = missionHandle.Horizon;
 h = missionHandle.sampling_time;
 
 % Separation of waypoints
-T = 1; %1s duration of motion
+%T = 1; %1s duration of motion
+T = missionHandle.T;
 
 % Map and obstacles
 map = missionHandle.map;

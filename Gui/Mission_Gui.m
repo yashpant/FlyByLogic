@@ -22,7 +22,7 @@ function varargout = Mission_Gui(varargin)
 
 % Edit the above text to modify the response to help Mission_Gui
 
-% Last Modified by GUIDE v2.5 09-Jul-2018 16:25:51
+% Last Modified by GUIDE v2.5 05-Dec-2018 10:33:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,7 +75,7 @@ drone_goals = cell(t_size(1),1);
 
 for i = 1:t_size(1)
     init_pos(:,i) = str2num(dat{i,2})'; %#ok<AGROW>
-    for j = 1:t_size(2)-2
+    for j = 1:t_size(2)-2%%%%%%%%%%%%%%%why this%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
         if ischar(dat{i,j+2})
             old_dat = str2num(dat{i,j+2});
         else
@@ -793,3 +793,29 @@ filename = dir('../Missions/*.mat');
 names = {filename.name};
 
 set(hObject,'String',names);
+
+
+
+function edit8_Callback(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit8 as text
+%        str2double(get(hObject,'String')) returns contents of edit8 as a double
+handles.myhandle.T = str2num(hObject.String);
+disp('Updated Mission Horizon');
+guidata(hObject, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function edit8_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
