@@ -18,6 +18,8 @@ h = missionHandle.sampling_time;
 % Separation of waypoints
 %T = 1; %1s duration of motion
 T = missionHandle.T;
+C = missionHandle.C;
+V_bounds = missionHandle.V_bounds;
 
 % Map and obstacles
 map = missionHandle.map;
@@ -38,8 +40,11 @@ M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
 
 % Tracker limits
 max_per_axis = 2;
-max_vel = 2; 
-max_accl = 4;
+%Should be in GUI%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Also make GUI for C.
+% max_vel = 2; 
+% max_accl = 4;
+% max_vel = V_bounds(1);
+% max_accl = V_bounds(2);
 
 % From vel constraints on pf
 K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T)
@@ -94,10 +99,12 @@ optParams.goal = goal;
 optParams.drone_goals = drone_goals;
 optParams.obs = obs;
 optParams.map = map;
-optParams.max_vel = max_vel; 
-optParams.max_accl = max_accl;
+% optParams.max_vel = max_vel; 
+%optParams.max_accl = max_accl;
 optParams.max_per_axis = max_per_axis;
 optParams.sampling_time = h;
+optParams.C = C;
+optParams.V_bounds = V_bounds;
 
 for i = 1:numel(obs)
 optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
@@ -191,14 +198,14 @@ for d = 1:N_drones
              K2_tprime*dp_y-T*K2_tprime*vy_km1;...
              K2_tprime*dp_z-T*K2_tprime*vz_km1;...
              [vx_k-vf_x;vy_k-vf_y;vz_k-vf_z]]; %from vel dynamics
-        lbg = [lbg;-max_vel*ones(3,1);-max_accl*ones(3,1);zeros(3,1)];
-        ubg = [ubg;+max_vel*ones(3,1);+max_accl*ones(3,1);zeros(3,1)];
+        lbg = [lbg;-V_bounds{d}(1)*ones(3,1);-V_bounds{d}(2)*ones(3,1);zeros(3,1)];
+        ubg = [ubg;+V_bounds{d}(1)*ones(3,1);+V_bounds{d}(2)*ones(3,1);zeros(3,1)];
            
         % overall bounds on movement
         lbw = [lbw;map.boundary(1:3)'];
         ubw = [ubw;map.boundary(4:6)'];
-        lbv = [lbv;-ones(3,1)*max_vel];
-        ubv = [ubv;+ones(3,1)*max_vel];
+        lbv = [lbv;-ones(3,1)*V_bounds{d}(1)];
+        ubv = [ubv;+ones(3,1)*V_bounds{d}(1)];%%%%%%%%%%%%%array wrt drones
     end
 end
 
@@ -232,8 +239,10 @@ pos0 = cell(N_drones, 1);
 vel0 = cell(N_drones, 1);
 
 %  For Each Drone
+temp = optParams.V_bounds;
 for i = 1:N_drones
     mission_type = 1*rem(i,2) + 2*(rem(i,2)==0);
+    optParams.V_bounds = V_bounds{i};
     [temp, tempv] = Mission_Get_Initial_Waypoints([p0(:,i);v0(:,i)],...
         optParams,mission_type);
     
@@ -247,7 +256,7 @@ for i = 1:N_drones
     pos0{i} = reshape(temp,3,H_formula+1);
     vel0{i} = reshape(tempv,3,H_formula+1);
 end
-
+optParams.V_bounds = V_bounds;
 var0 = [w0;vv0];
 optParams.var0 = var0;
 Init_waypoints_rob = Mission_Robustness(var0,optParams);

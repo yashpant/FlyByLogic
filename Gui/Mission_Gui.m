@@ -22,7 +22,7 @@ function varargout = Mission_Gui(varargin)
 
 % Edit the above text to modify the response to help Mission_Gui
 
-% Last Modified by GUIDE v2.5 05-Dec-2018 10:33:44
+% Last Modified by GUIDE v2.5 07-Dec-2018 22:03:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -62,11 +62,11 @@ addpath('../Missions');
 handles.output = hObject;
      
 % Populate Table with Defaults
-Mission_Table  = findobj('Tag','Mission_Table_tag');
-d = {'Drone1','[2,2,6]','[0 5; 5 10]'};
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
+d = {'Drone1','[2,2,6]','[2 4]','[0 5; 5 10]'};
 set(Mission_Table, 'Data', d);
 cur_cols = get(Mission_Table, 'ColumnName');
-set(Mission_Table, 'ColumnName', cur_cols(1:3))
+set(Mission_Table, 'ColumnName', cur_cols(1:4))
 
 dat = Mission_Table.Data;
 t_size = size(dat);
@@ -75,11 +75,12 @@ drone_goals = cell(t_size(1),1);
 
 for i = 1:t_size(1)
     init_pos(:,i) = str2num(dat{i,2})'; %#ok<AGROW>
-    for j = 1:t_size(2)-2%%%%%%%%%%%%%%%why this%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
-        if ischar(dat{i,j+2})
-            old_dat = str2num(dat{i,j+2});
+    V_bounds{i} = str2num(dat{i,3});
+    for j = 1:t_size(2)-3%%%%%%%%%%%%%%%why this%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+        if ischar(dat{i,j+3})
+            old_dat = str2num(dat{i,j+3});
         else
-            old_dat = dat{i,j+2};
+            old_dat = dat{i,j+3};
         end
         
         if (size(old_dat))
@@ -90,6 +91,7 @@ for i = 1:t_size(1)
     end
 end
 
+handles.myhandle.V_bounds = V_bounds;
 handles.myhandle.drone_goals = drone_goals;
 handles.myhandle.init_pos = init_pos;
 handles.myhandle.N_drones = 1;
@@ -119,13 +121,21 @@ dminEditText = findobj('Tag','dminEditText');
 dminEditText.String = '0.1';
 handles.myhandle.d_min = 0.1;
 
-horizonEditText = findobj('Tag','horizonEditText');
-horizonEditText.String = '20';
-handles.myhandle.Horizon = 20;
+edit8 = findobj('Tag','edit8');
+edit8.String = '1';
+handles.myhandle.T = 1;
+
+edit9 = findobj('Tag','edit9');
+edit9.String = '30';
+handles.myhandle.C = 30;
 
 samplingEditText = findobj('Tag','samplingEditText');
 samplingEditText.String = '0.05';
 handles.myhandle.sampling_time = 0.05;
+
+horizonEditText = findobj('Tag','horizonEditText');
+horizonEditText.String = '20';
+handles.myhandle.Horizon = 20;
 
 handles = updateEnvironment(handles);
 view(handles.disp_axes, -60, 10);
@@ -139,6 +149,22 @@ set(handles.missionLoaded_data, 'String', 'default');
 handles.missionToLoad = '../Missions/default.mat';
 handles %#ok<NOPRT>
 % Update handles structure
+%Code to add Latex in static text boxes%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
+% % Find all static text UICONTROLS whose 'Tag' starts with latex_
+% lbls = findobj(hObject,'-regexp','tag','latex_*');
+% for i=1:length(lbls)
+%       l = lbls(i);
+%       % Get current text, position and tag
+%       set(l,'units','normalized');
+%       s = get(l,'string');
+%       p = get(l,'position');
+%       t = get(l,'tag');
+%       % Remove the UICONTROL
+%       delete(l);
+%       % Replace it with a TEXT object 
+%       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
+% end
 guidata(hObject, handles);
 
 % UIWAIT makes Mission_Gui wait for user response (see UIRESUME)
@@ -159,7 +185,7 @@ function handles = update_mission(handles)
 %  collect drone goal interval data
 
 % Get mission table object
-Mission_Table  = findobj('Tag','Mission_Table_tag');
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
 
 % Get data from mission table
 dat = Mission_Table.Data;
@@ -206,7 +232,7 @@ N_goals = get(handles.ngoalsPopupmenu, 'Value');
 % handles.myhandle.N_drones = N_drones;
 
 % Get mission table object
-Mission_Table  = findobj('Tag','Mission_Table_tag');
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
 
 % Get data from mission table
 cur_table = get(Mission_Table, 'Data');
@@ -333,9 +359,9 @@ names = {filename.name};
 set(hObject, 'String', names);
 
 
-% --- Executes when entered data in editable cell(s) in Mission_Table_tag.
-function Mission_Table_tag_CellEditCallback(hObject, eventdata, handles)
-% hObject    handle to Mission_Table_tag (see GCBO)
+% --- Executes when entered data in editable cell(s) in latex_Mission_Table_tag.
+function latex_Mission_Table_tag_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to latex_Mission_Table_tag (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Indices: row and column indices of the cell(s) edited
 %	PreviousData: previous data for the cell(s) edited
@@ -683,7 +709,7 @@ function saveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.myhandle.missionTable = get(handles.Mission_Table_tag, 'Data');
+handles.myhandle.missionTable = get(handles.latex_Mission_Table_tag, 'Data');
 handles.myhandle.obstacleTable = get(handles.Obstacle_Table_tag, 'Data');
 handles.myhandle.goalTable = get(handles.Goal_Table_tag, 'Data');
 
@@ -737,7 +763,7 @@ set(handles.missionnameEditText, 'String', handles.myhandle.mission_name);
 set(handles.missionLoaded_data, 'String', handles.myhandle.mission_name);
 
 % populate tables
-set(handles.Mission_Table_tag, 'Data', handles.myhandle.missionTable);
+set(handles.latex_Mission_Table_tag, 'Data', handles.myhandle.missionTable);
 set(handles.Obstacle_Table_tag, 'Data', handles.myhandle.obstacleTable);
 set(handles.Goal_Table_tag, 'Data', handles.myhandle.goalTable);
 
@@ -811,6 +837,29 @@ guidata(hObject, handles)
 % --- Executes during object creation, after setting all properties.
 function edit8_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit9_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit9 as text
+%        str2double(get(hObject,'String')) returns contents of edit9 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit9_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
