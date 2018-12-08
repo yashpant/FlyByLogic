@@ -242,7 +242,7 @@ cur_cols = get(Mission_Table, 'ColumnName');
 [N1,M1] = size(cur_table);
 
 % Make new table
-new_table = cell(N_drones, N_goals+2);
+new_table = cell(N_drones, N_goals+3);
 [N2,M2] = size(new_table);
 
 for i = 1:N2
@@ -253,11 +253,11 @@ for i = 1:N2
     end
 end
 
-cur_cols(3:end) = [];
+cur_cols(4:end) = [];
 
 % Update Mission table header
 for i = 1: N_goals
-    cur_cols(i+2) = {['Goal',num2str(i)]};
+    cur_cols(i+3) = {['Goal',num2str(i)]};
 end
 
 
