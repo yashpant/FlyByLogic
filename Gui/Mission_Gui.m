@@ -203,11 +203,11 @@ for i = 1:t_size(1)
         disp('Please specify all initial positions')
     end
     
-    for j = 1:t_size(2)-2
-        if ischar(dat{i,j+2})
-            old_dat = str2num(dat{i,j+2});
+    for j = 1:t_size(2)-3
+        if ischar(dat{i,j+3})
+            old_dat = str2num(dat{i,j+3});
         else
-            old_dat = dat{i,j+2};
+            old_dat = dat{i,j+3};
         end
         
         if (size(old_dat))
@@ -401,6 +401,7 @@ end
 
 % Update the Goal Table with the new table
 set(Goal_Table, 'Data', new_table);
+handles = update_goals(handles);
 
 % Populate handles with updated goals
 function handles = update_goals(handles)
@@ -424,10 +425,12 @@ for i = 1:t_size(1)
     else
         array = (dat{i,1})';
     end
-    goal{i}.lb = array(1:3);
-    goal{i}.ub = array(4:6);
-    goal{i}.stop = 0.5*(array(1:3) + array(4:6));
-    goal{i}.col = 'green';
+    if ~isempty(array)
+        goal{i}.lb = array(1:3);
+        goal{i}.ub = array(4:6);
+        goal{i}.stop = 0.5*(array(1:3) + array(4:6));
+        goal{i}.col = 'green';
+    end
 end
 
 disp('Updated goals');

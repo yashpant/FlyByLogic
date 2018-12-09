@@ -12,11 +12,14 @@ obs = getObstacles(map_name, ext_blocks);
 % Load the Map
 map = load_map(map_name, .5, .5, 0);
 
+disp(goal)
 % Plot goals with color if goals exist
 if(~isempty(goal{1}))
     for i = 1:length(goal)
-        goal{i}.poly = Polyhedron('lb',goal{i}.lb,'ub',goal{i}.ub);
-        plot(goal{i}.poly,'Color',goal{i}.col,'alpha',0.5); hold on;
+        if ~isempty(goal{i})
+            goal{i}.poly = Polyhedron('lb',goal{i}.lb,'ub',goal{i}.ub);
+            plot(goal{i}.poly,'Color',goal{i}.col,'alpha',0.5); hold on;
+        end
     end
 end
 
