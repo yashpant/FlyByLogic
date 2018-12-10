@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2018.11.23)  10 DEC 2018 12:38
+This is pdfTeX, Version 3.1415926-2.5-1.40.14 (TeX Live 2013/Debian) (format=pdflatex 2018.11.23)  10 DEC 2018 12:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -466,7 +466,7 @@ LaTeX Info: Redefining \nameref on input line 18.
 \MPnumerator=\count147
 \makeMPintoPDFobject=\count148
 \everyMPtoPDFconversion=\toks44
-) (./ex_article.bbl
+) (./introduction.tex) (./ex_article.bbl
 
 LaTeX Warning: Empty `thebibliography' environment on input line 3.
 
@@ -482,34 +482,25 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 37.
  (./ex_article.aux)
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 37.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 37.
-
-
-Package rerunfilecheck Warning: File `ex_article.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `ex_article.out':
-(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
-(rerunfilecheck)             After:  A02D95553E30B97FF125B1AA17CF9044;47.
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
+Package rerunfilecheck Info: File `ex_article.out' has not changed.
+(rerunfilecheck)             Checksum: A02D95553E30B97FF125B1AA17CF9044;47.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 37.
  ) 
 Here is how much of TeX's memory you used:
- 9051 strings out of 493304
- 140731 string characters out of 6139870
+ 9056 strings out of 493304
+ 140790 string characters out of 6139870
  344561 words of memory out of 5000000
- 12431 multiletter control sequences out of 15000+600000
+ 12433 multiletter control sequences out of 15000+600000
  6347 words of font info for 23 fonts, out of 8000000 for 9000
  957 hyphenation exceptions out of 8191
- 37i,8n,39p,254b,354s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></us
-r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb>
-Output written on ex_article.pdf (1 page, 21514 bytes).
+ 37i,8n,39p,254b,337s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr
+/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmss10.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb>
+Output written on ex_article.pdf (1 page, 31556 bytes).
 PDF statistics:
- 22 PDF objects out of 1000 (max. 8388607)
- 16 compressed objects within 1 object stream
+ 30 PDF objects out of 1000 (max. 8388607)
+ 23 compressed objects within 1 object stream
  3 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 9 words of extra memory for PDF output out of 10000 (max. 10000000)
 
