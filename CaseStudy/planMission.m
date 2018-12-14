@@ -9,7 +9,9 @@ N_drones = missionHandle.N_drones;
 % Drone Minimum Separation
 d_min = missionHandle.d_min;
 
-% How long is the mission?
+% How long is the missions
+
+
 H_formula = missionHandle.Horizon;
 
 % Set Sampling Time 
@@ -47,7 +49,7 @@ max_per_axis = 2;
 % max_accl = V_bounds(2);
 
 % From vel constraints on pf
-K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T)
+K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T);
 
 % From accl constraints on pf
 aa =  (90/4)*(1/T^5);
@@ -61,7 +63,7 @@ tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
 t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); 
 
 K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
-    (30/2)*(t_prime)/(T^3)
+    (30/2)*(t_prime)/(T^3);
 
 % Set Initial Random Initial Positions
 if(0) 
