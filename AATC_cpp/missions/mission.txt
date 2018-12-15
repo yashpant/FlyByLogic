@@ -1,0 +1,46 @@
+Mission Details
+*******************************
+
+Number of Drones     :  8
+Number of Obstacles  :  1
+Number of Goals      :  1
+Waypoint Interval    :  1 (s) 
+Time step            :  0.05 (s) 
+Points per Interval  :  20
+Mission Horizon      :  6 (s) 
+Minimum Separation   :  0.1 (m) 
+
+Initial Positions
+-----------------------
+Drone#  : [x0, y0, z0]
+Drone0  : [-1.25, -1.25, 1.75]
+Drone1  : [1.25, -1.25, 1.75]
+Drone2  : [-1.25, 1.25, 1.75]
+Drone3  : [1.25, 1.25, 1.75]
+Drone4  : [-1.45, -1.45, 1.75]
+Drone5  : [1.45, -1.45, 1.75]
+Drone6  : [-1.45, 1.45, 1.75]
+Drone7  : [1.45, 1.45, 1.75]
+
+Obstacles
+-----------------------
+Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]
+Obstacle0  : [-1, -1, 0, 1, 1, 1.5]
+
+Goals
+-----------------------
+Goal#  : [lbx, lby, lbz, ubx, uby, ubz]
+Goal0  : [1.25, 1.25, 0.25, 2.25, 2.25, 1.25]
+
+Goal Intervals
+-----------------------
+Spec#  : [Drone#, Goal#, iStart, iEnd]
+Spec1  : [0, 0, 0, 6]
+Spec2  : [1, 0, 0, 6]
+Spec3  : [2, 0, 0, 6]
+Spec4  : [3, 0, 0, 6]
+Spec5  : [4, 0, 0, 6]
+Spec6  : [5, 0, 0, 6]
+Spec7  : [6, 0, 0, 6]
+Spec8  : [7, 0, 0, 6]
+
