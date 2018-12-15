@@ -7,7 +7,7 @@ function varargout = Mission_Gui(varargin)
 %      the existing singleton*.
 %
 %      MISSION_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MISSION_GUI.M with the given input arguments.
+%      function named CALLBA    CK in MISSION_GUI.M with the given input arguments.
 %
 %      MISSION_GUI('Property','Value',...) creates a new MISSION_GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
@@ -841,7 +841,7 @@ function edit8_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit8 as text
 %        str2double(get(hObject,'String')) returns contents of edit8 as a double
 handles.myhandle.T = str2num(hObject.String);
-disp('Updated Mission Horizon');
+disp('Updated Time between Waypoints');
 guidata(hObject, handles)
 
 
@@ -866,7 +866,9 @@ function edit9_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit9 as text
 %        str2double(get(hObject,'String')) returns contents of edit9 as a double
-
+handles.myhandle.C = str2num(hObject.String);
+disp('Updated Smoothing Constant');
+guidata(hObject, handles)
 
 % --- Executes during object creation, after setting all properties.
 function edit9_CreateFcn(hObject, eventdata, handles)
