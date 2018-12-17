@@ -17,7 +17,7 @@ H_formula = missionHandle.Horizon;
 % Set Sampling Time 
 h = missionHandle.sampling_time;
 
-% Separation of waypoints
+% Separation of waypoints 
 %T = 1; %1s duration of motion
 T = missionHandle.T;
 C = missionHandle.C;
