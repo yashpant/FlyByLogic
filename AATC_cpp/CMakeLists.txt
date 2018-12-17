@@ -15,3 +15,6 @@ add_executable(FBL main.cpp)
 add_library(aatc AATC.cpp)
 target_link_libraries(aatc casadi)
 target_link_libraries(FBL aatc casadi)
+
+add_executable(Gui_Interface FBL_gui_interface.cpp)
+target_link_libraries(Gui_Interface aatc casadi)

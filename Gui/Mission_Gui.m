@@ -1,3 +1,4 @@
+%%
 function varargout = Mission_Gui(varargin)
 % MISSION_GUI MATLAB code for Mission_Gui.fig
 %      MISSION_GUI, by itself, creates a new MISSION_GUI or raises the existing
@@ -52,11 +53,13 @@ function Mission_Gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Mission_Gui (see VARARGIN)
 
+disp(pwd);
 addpath('../MiscFunctions');
 addpath('../Maps_mrsl');
 addpath('../CaseStudy/subfunctions');
 addpath('../CaseStudy');
 addpath('../Missions');
+addpath('../AATC_cpp');
 
 % Choose default command line output for Mission_Gui
 handles.output = hObject;
@@ -197,18 +200,23 @@ t_size = size(dat);
 drone_goals = cell(t_size(1),1);
 V_bounds = cell(t_size(1),1);
 
+% loop over # of rows in Table
 for i = 1:t_size(1)
+    % get initial positions (column 2)
     if (size(dat{i,2}))
         init_pos(:,i) = str2num(dat{i,2})';
     else
         disp('Please specify all initial positions')
     end
+    
+    % get v and a bounds (column 3)
     if (size(dat{i,3}))
         V_bounds{i} = str2num(dat{i,3});
     else
         disp('Please specify all Velocity and Acceleration bounds')
     end
     
+    % gather goal intervals (column 4+)
     for j = 1:t_size(2)-3
         if ischar(dat{i,j+3})
             old_dat = str2num(dat{i,j+3});
@@ -681,12 +689,211 @@ set(handles.missionStatus_data, 'String', 'Not Ready');
 % Do routine error checks
 % Check all
 disp('Planning Mission....');
-[handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
-Plan_Time = handles.myhandle.time_taken
+
+% Write to file
+fileID = fopen('../Missions/current_mission.txt','w');
+fprintf(fileID,'Printing Mission Details\n');
+fprintf(fileID,'*******************************\n\n');
+fprintf(fileID,'Number of Drones     :  %d\n', handles.myhandle.N_drones);
+fprintf(fileID,'Number of Obstacles  :  %d\n', size(handles.myhandle.obs),1);
+fprintf(fileID,'Number of Goals      :  %d\n', length(handles.myhandle.goal));
+fprintf(fileID,'Waypoint Interval    :  %4.2f (s)\n', handles.myhandle.T);
+fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
+fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);
+fprintf(fileID,'Minimum Separation   :  %4.2f (m)\n', handles.myhandle.d_min);
+
+fprintf(fileID, '\nInitial Positions and limits\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Drone#  : [x0, y0, z0, v_max, a_max]\n');
+
+for i = 1:size(handles.myhandle.init_pos,2)
+    fprintf(fileID, 'Drone%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.init_pos(:,i), handles.myhandle.V_bounds{i});
+end
+
+fprintf(fileID, '\nObstacles\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+
+for i = 1:size(handles.myhandle.obs,1)
+    fprintf(fileID, 'Obstacle%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.obs{i}.lb, handles.myhandle.obs{i}.ub);
+end
+
+fprintf(fileID, '\nGoals\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Goal#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+
+disp(size(handles.myhandle.goal,1))
+for i = 1:size(handles.myhandle.goal,1)
+    fprintf(fileID, 'Goal%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.goal{i}.lb, handles.myhandle.goal{i}.ub);
+end
+
+fprintf(fileID, '\nGoal Intervals\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Spec#  : [Drone#, Goal#, iStart, iEnd]\n');
+count = 0;
+
+for i = 1:size(handles.myhandle.drone_goals,1)
+    for j = 1:size(handles.myhandle.drone_goals{i})
+        arr = [count, i, handles.myhandle.drone_goals{i}(j,:)] - [0 1 1 0 0];
+        fprintf(fileID, 'Spec%d  : [%d, %d, %d, %d]\n', arr);
+        count = count + 1;
+    end
+end
+
+fclose(fileID);
+
+% call C++ gui_interface
+!./../AATC_cpp/bin/Gui_Interface
+
+% read info from output file
+fileID = fopen('../Missions/current_mission_output.txt');
+
+while ~feof(fileID)
+    line = fgets(fileID); % read in one line
+    if strfind(line,'Mission Results')
+        continue;
+    elseif strfind(line,'Mission Results')
+        continue;
+    elseif strfind(line,'****')
+        continue;
+    elseif strfind(line,'------')
+        continue;
+    elseif strfind(line,'w_opt')
+        handles.myhandle.w_opt = str2num(line(8:end));
+        continue;
+    elseif strfind(line,'Time Taken')
+        handles.myhandle.time_taken = str2num(line(13:end-10));
+        continue;
+    end
+end
+
+fclose(fileID);
+
+% Get optParams (work around)
+% How many drones?
+N_drones = handles.myhandle.N_drones;
+
+% Drone Minimum Separation
+d_min = handles.myhandle.d_min;
+
+% How long is the missions
+
+
+H_formula = handles.myhandle.Horizon;
+
+% Set Sampling Time 
+h = handles.myhandle.sampling_time;
+
+% Separation of waypoints
+%T = 1; %1s duration of motion
+T = handles.myhandle.T;
+% C = handles.myhandle.C;
+V_bounds = handles.myhandle.V_bounds;
+
+% Map and obstacles
+map = handles.myhandle.map;
+obs = handles.myhandle.obs;
+
+% goals
+goal = handles.myhandle.goal;
+
+drone_goals = handles.myhandle.drone_goals;
+
+% init_pos
+init_pos = handles.myhandle.init_pos;
+%% Generate Constraints for Trajectory
+
+% Initialize Tracker Variables
+
+M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
+
+% Tracker limits
+max_per_axis = 2;
+%Should be in GUI%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Also make GUI for C.
+% max_vel = 2; 
+% max_accl = 4;
+% max_vel = V_bounds(1);
+% max_accl = V_bounds(2);
+
+% From vel constraints on pf
+K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T);
+
+% From accl constraints on pf
+aa =  (90/4)*(1/T^5);
+bb = -(90/2)*(1/T^4);
+cc =  (30/2)*(1/T^3);
+
+tp1 = (-bb+sqrt(bb^2-4*aa*cc))/(2*aa);
+tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
+
+% Pick the right one
+t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); 
+
+K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
+    (30/2)*(t_prime)/(T^3);
+
+% Set Initial Random Initial Positions
+if(0) 
+    % Randon Initial Position of Drones
+    p0 = random_p0_generator(map,obs,N_drones);
+else
+    p0 = init_pos;
+end
+
+% Initial Velocities (Start from Rest)
+v0 = zeros(3,N_drones);
+
+% Zero Initial Jerk and Acceleration
+da = 0;
+dv = 0;
+
+% Total Number of steps (per Drone)
+Nsteps = H_formula*(T/h);
+
+Clen = 3*(H_formula+1);
+
+% Populate optParams structure
+optParams.N_drones = N_drones;
+optParams.d_min = d_min;
+optParams.Clen = Clen;
+optParams.T = T;
+optParams.M1 = M1;
+optParams.K1_T = K1_T;
+optParams.K2_tprime = K2_tprime;
+optParams.da = da;
+optParams.dv = dv;
+optParams.H_formula = H_formula;
+optParams.N_per_T = T/h;
+optParams.goal = goal;
+optParams.drone_goals = drone_goals;
+optParams.obs = obs;
+optParams.map = map;
+% optParams.max_vel = max_vel; 
+%optParams.max_accl = max_accl;
+optParams.max_per_axis = max_per_axis;
+optParams.sampling_time = h;
+% optParams.C = C;
+optParams.V_bounds = V_bounds;
+
+for i = 1:numel(obs)
+optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
+optParams.obs_ub_N{i} = repmat(obs{i}.ub,Nsteps+1,1);
+end
+
+for i = 1:numel(goal)
+optParams.goal{i}.goal_lb_N = repmat(goal{i}.lb',Nsteps+1,1);
+optParams.goal{i}.goal_ub_N = repmat(goal{i}.ub',Nsteps+1,1);
+end
+
+handles.myhandle.optParams = optParams;
+if (0)
+    [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
+end
+
+% Plan_Time = handles.myhandle.time_taken
 set(handles.missionStatus_data, 'String', 'Ready');
 
 guidata(hObject, handles)
-
 
 
 function missionnameEditText_Callback(hObject, eventdata, handles)
@@ -764,6 +971,9 @@ set(handles.horizonEditText, 'String', handles.myhandle.Horizon);
 % load Samp. Freq
 set(handles.samplingEditText, 'String', handles.myhandle.sampling_time);
 
+% % load Time BTW waypoints
+% set(handles.edit8, 'String', handles.myhandle.T);
+
 % load drone min sep
 set(handles.dminEditText, 'String', handles.myhandle.d_min);
 
@@ -787,6 +997,7 @@ catch
 end
 
 % Update environment
+handles = update_mission_table(handles);
 handles = updateEnvironment(handles);
 
 guidata(hObject, handles)
@@ -841,7 +1052,7 @@ function edit8_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit8 as text
 %        str2double(get(hObject,'String')) returns contents of edit8 as a double
 handles.myhandle.T = str2num(hObject.String);
-disp('Updated Mission Horizon');
+disp('Updated Waypoint Interval');
 guidata(hObject, handles)
 
 

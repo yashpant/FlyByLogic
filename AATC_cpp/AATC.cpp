@@ -13,6 +13,7 @@ bool AATC::loadMission(string filename){
   int count = 0;
   vector<vector<double>> p0;
   vector<vector<double>> v0;
+  vector<vector<double>> v_bounds;
   vector<vector<double>> obs;
   vector<vector<double>> goal;
   vector<vector<double>> droneGoal;
@@ -96,17 +97,23 @@ bool AATC::loadMission(string filename){
     }
 
     if ((line.rfind("Drone")!=string::npos)){
-      vector<double> p0_, v0_;
+      vector<double> p0_, v0_, v_bounds_;
       line = line.substr(1+line.find("["));
       std::string::size_type sz;
 
-      for (int j = 0; j < 3; j++){
-        v0_.push_back(0);
-        p0_.push_back(stof(line, &sz));
+      for (int j = 0; j < 5; j++){
+        if (j < 3){
+          v0_.push_back(0);
+          p0_.push_back(stof(line, &sz));
+        }
+        else{
+          v_bounds_.push_back(stof(line, &sz));
+        }
         line = line.substr(sz+1);
       }
       v0.push_back(v0_);
       p0.push_back(p0_);
+      v_bounds.push_back(v_bounds_);
       continue;
     }
 
@@ -158,6 +165,7 @@ bool AATC::loadMission(string filename){
   optParams.obs = obs;
   optParams.p0 = p0;
   optParams.v0 = v0;
+  optParams.v_bounds =v_bounds;
   optParams.droneGoal = droneGoal;
 
   // cout << "nDrones : " << optParams.nDrones << endl;
@@ -238,14 +246,13 @@ void AATC::printMission(ostream& out){
   out << "Number of Goals      :  " << optParams.goal.size() << endl;
   out << "Waypoint Interval    :  " << optParams.T << " (s) " << endl;
   out << "Time step            :  " << optParams.h << " (s) " << endl;
-  out << "Points per Interval  :  " << optParams.npt << endl;
   out << "Mission Horizon      :  " << optParams.Horizon << " (s) " << endl;
   out << "Minimum Separation   :  " << optParams.minSep << " (m) " << endl;
   
   out << endl << "Initial Positions" << endl;
   out << "-----------------------" << endl;
-  out << "Drone#  : [x0, y0, z0]" << endl;
-  for (int i = 0; i < optParams.p0.size() ; i++){
+  out << "Drone#  : [x0, y0, z0, v_max, a_max]" << endl;
+  for (int i = 0; i < optParams.p0.size() + 2; i++){
     out << "Drone" << i << "  : " << optParams.p0[i] << endl;
   }
   out << endl;
@@ -273,7 +280,35 @@ void AATC::printMission(ostream& out){
     out << "Spec" << i+1 << "  : " << optParams.droneGoal[i] << endl;
   }
   out << endl;
-  out << endl << endl;
+}
+
+void AATC::printMissionOutput(ostream& out){
+  
+  // print details to output file
+  //***********************************************************
+  out << "Mission Results" << endl;
+  out << "*********************************" << endl;
+
+  out << endl;
+  out << "smooth robustness :               " << dmOut.rob << endl;
+  out << "separation_robustness :           " << dmOut.sepRob << endl;
+  out << "goal_robustness :                 " << dmOut.goalRob << endl;
+  out << "unsafe_robustness :               " << dmOut.unsafeRob << endl;
+  out << "total trajectory length :         " << dmOut.traj_length << endl;
+
+
+  time_centralized = ((float)t)/CLOCKS_PER_SEC;
+  out << endl;
+  out << "----------------------------------------------------------------------------" << endl;
+  out << "w_opt = ";
+  out << fixed;
+  for (int k = 0; k < res["x"].size1()-1; k++){
+    out << setprecision(1) << res["x"](k) << " ";
+  }
+  out << setprecision(1) << res["x"](res["x"].size1()-1) << endl;
+  out << "----------------------------------------------------------------------------" << endl;
+  out << "Time Taken : "<< time_centralized <<" second(s)"<< endl;
+  //***********************************************************
 }
 
 AATC::AATC(){
@@ -490,7 +525,7 @@ AATC::AATC(string filename){
     exit(1);
   }
 
-  printMission(cout);
+  // printMission(cout);
 }
 
 AATC::AATC(int n_drones, float horizon, float dt, float DT, float min_sep, vector<vector<double>> goal, vector<vector<double>> goal_intervals, vector<vector<double>> obs){
@@ -834,7 +869,7 @@ T AATC::sepRob(T xx, T yy, T zz, double minSep){
 
 template <typename in_type>
 void AATC::missionRob(in_type var){
-  // cout << "In Mission Rob" << endl;
+  cout << "In Mission Rob" << endl;
   // extract some mission details
   int H = optParams.Horizon;
   int npt = optParams.npt;
@@ -846,7 +881,7 @@ void AATC::missionRob(in_type var){
 
   //cout << endl << "N : " << N << endl;
   //cout << "nDrones : " << nDrones << endl;
-
+  cout << "Got 1st Params" << endl;
   vector<double> dT_;
   double step = T/npt;
 
@@ -910,9 +945,13 @@ void AATC::missionRob(in_type var){
   yy = horzcat(yyPerDrone);
   zz = horzcat(zzPerDrone);
 
+  // cout << "Computing Robusteness....." << endl;
   rho_sep = sepRob(xx, yy, zz, optParams.minSep);
+  // cout << "Got Sep Robustness" << endl;
   rho_goal = goalRob(xx, yy, zz, optParams.goal, optParams.droneGoal);
+  // cout << "Got Goal Robustness" << endl;
   rho_unsafe = unsafeRob(xx, yy, zz, optParams.obs);
+  // cout << "Got Unsafe Robustness" << endl;
 
   // compute total length of trajectory
   in_type traj_length = 0;
@@ -963,7 +1002,7 @@ void AATC::formulateMission(){
   vector<double> lbw, ubw, lbv, ubv, lbg, ubg, lbq, ubq;
 
   // define map bounds -- INPUT
-  double lmapX = -2, lmapY = -2, lmapZ = -0, umapX = 2, umapY = 2, umapZ = 2;
+  double lmapX = -5, lmapY = -5, lmapZ = -0, umapX = 5, umapY = 5, umapZ = 5;
 
   MX pCur, pPrev, vCur, vPrev, dp, foo, mCons, vf;
   double dv = 0, da = 0, maxVel = 20, maxAcc = 20; 
@@ -973,17 +1012,24 @@ void AATC::formulateMission(){
 
   maxAcc = 2;
   maxVel = 1.751;
-
-  vector<double> lbg_ = {-maxVel,-maxVel,-maxVel,-maxAcc,-maxAcc,-maxAcc,0,0,0};
-  vector<double> ubg_ = {+maxVel,+maxVel,+maxVel,+maxAcc,+maxAcc,+maxAcc,0,0,0};
-  vector<double> lbw_ = {lmapX, lmapY, lmapZ};
-  vector<double> ubw_ = {umapX, umapY, umapZ};
-  vector<double> lbv_ = {-maxVel, -maxVel, -maxVel};
-  vector<double> ubv_ = {+maxVel, +maxVel, +maxVel};
+  vector<vector<double>> lbg_, ubg_, lbw_, ubw_, lbv_, ubv_;
   vector<double> goall = {1.75, 1.75, 0.75};
   vector<double> goalu = {2, 2, 1};
   vector<double> zil_ = {0, 0, 0};
-
+  
+  for (int k = 0; k < optParams.nDrones; k++){
+    if (optParams.v_bounds.size()){
+      maxVel = optParams.v_bounds[k][0];
+      maxAcc = optParams.v_bounds[k][1];
+    }
+    lbg_.push_back({-maxVel,-maxVel,-maxVel,-maxAcc,-maxAcc,-maxAcc,0,0,0});
+    ubg_.push_back({+maxVel,+maxVel,+maxVel,+maxAcc,+maxAcc,+maxAcc,0,0,0});
+    lbw_.push_back({lmapX, lmapY, lmapZ});
+    ubw_.push_back({umapX, umapY, umapZ});
+    lbv_.push_back({-maxVel, -maxVel, -maxVel});
+    ubv_.push_back({+maxVel, +maxVel, +maxVel});
+  }
+  
   // construct T vector
   vector<double> Tvec_ = {pow(T,4)/24, pow(T,3)/6, pow(T,2)/2};
   MX Tvec = MX(Tvec_);
@@ -991,46 +1037,63 @@ void AATC::formulateMission(){
   stringstream pname, vname;
 
   for(int d = 0; d < nDrones; d++){
+    // cout << d << endl;
+    // set position bounds for initial state
     lbw.insert(lbw.end(), p0[d].begin(), p0[d].end());
     ubw.insert(ubw.end(), p0[d].begin(), p0[d].end());
 
+    // set velocity bounds for initial state
     lbv.insert(lbv.end(), v0[d].begin(), v0[d].end());
     ubv.insert(ubv.end(), v0[d].begin(), v0[d].end());
 
+    // construct variable names for initial state of drone d
     pname << "p" << d << "0";
     vname << "v" << d << "0";
-
+    
+    // initialize casadi smybolic variable for initial state of drone d
     pPrev = MX::sym(pname.str(),3,1);
     vPrev = MX::sym(pname.str(),3,1);
 
+    // push symbolic variable to state variable array
     w.push_back(pPrev);
     v.push_back(vPrev);
 
-    pname.str(""); vname.str("");
-
+    // for all big time steps from 0 to H (steps of T - waypoint interval)
     for(int k = 0; k < H; k++){
+
+      // clear out variable names (to empty strings)
+      pname.str(""); vname.str("");
+
+      // construct variable name for k+1(th) state of drone d
       pname << "p" << d << "" << k+1;
       vname << "v" << d << "" << k+1;
 
+      // initialize casadi symbolic variable for k+1(th) state of drone d
       pCur = MX::sym(pname.str(),3,1);
       vCur = MX::sym(vname.str(),3,1);
 
+      // push varible into state variable array
       w.push_back(pCur);
-      lbw.insert(lbw.end(), lbw_.begin(), lbw_.end());
-      ubw.insert(ubw.end(), ubw_.begin(), ubw_.end());
       
+      // set position bounds for k+1(th) state of drone d
+      lbw.insert(lbw.end(), lbw_[d].begin(), lbw_[d].end());
+      ubw.insert(ubw.end(), ubw_[d].begin(), ubw_[d].end());
+      
+      // push variable into state variable array
       v.push_back(vCur);
+
+      // set velocity bounds for k+1(th) state of drone d
+      // if last waypoint, ensure stopping criteria 
       if(k < H-1){
-        lbv.insert(lbv.end(), lbv_.begin(), lbv_.end());
-        ubv.insert(ubv.end(), ubv_.begin(), ubv_.end());
+        lbv.insert(lbv.end(), lbv_[d].begin(), lbv_[d].end());
+        ubv.insert(ubv.end(), ubv_[d].begin(), ubv_[d].end());
       }
       else{
         lbv.insert(lbv.end(), zil_.begin(), zil_.end());
         ubv.insert(ubv.end(), zil_.begin(), zil_.end());
       }
 
-      pname.str(""); vname.str("");
-
+      // Handle dynamic constaints
       // dp for all axes
       dp = pCur - pPrev - T*vPrev;
       foo = horzcat(dp,dv*MX::ones(3,1),da*MX::ones(3,1)).T();
@@ -1042,30 +1105,33 @@ void AATC::formulateMission(){
       g.push_back(k2t*dp);      // acc constraints
       g.push_back(vCur - vf);
 
-      lbg.insert(lbg.end(), lbg_.begin(), lbg_.end());
-      ubg.insert(ubg.end(), ubg_.begin(), ubg_.end());
+      lbg.insert(lbg.end(), lbg_[d].begin(), lbg_[d].end());
+      ubg.insert(ubg.end(), ubg_[d].begin(), ubg_[d].end());
 
       pPrev = pCur;
       vPrev = vCur;
     }
   }
   
-  // join v to end of w
+  // concatenate the velocity state to the position state
   w.insert(w.end(), v.begin(), v.end());
   lbw.insert(lbw.end(), lbv.begin(), lbv.end());
   ubw.insert(ubw.end(), ubv.begin(), ubv.end());
 
+  // convert state array from vector<MX> to column MX vector (this is how casadi wants it to be) 
   MX var = vertcat(w);    // this is x
-  missionRob(var);
-  MX f;  
-  // get the waypoints
+
+  // Generate initial waypoints using a simple QP problem
+  //***************************************************************************
+
+  // Extract waypoints from state array
   vector<MX> var_ = vertsplit(var, var.size1()/2);
-  // define QP
+
+  // Define QP
   MXDict qp;
   qp["x"] = var;
   qp["f"] = sum1(sum2(pow(var_[0] - repmat(DM(goall),nDrones*(H+1),1), 2)));
   qp["g"] = vertcat(g);
-
 
   DMDict qp_args;
   qp_args["lbg"] = lbg;
@@ -1075,17 +1141,26 @@ void AATC::formulateMission(){
 
   Dict qpoasesOpts;
   qpoasesOpts["printLevel"] = "none";
+
+  cout << "Getting Initial Solution" << endl;
   // cout << "Init solve" << endl;
   Function init_solver =  qpsol("init", "qpoases", qp, qpoasesOpts);
-  // cout << "HELLO THERE" << endl;
   DMDict init_res = init_solver(qp_args);
+
+  cout << "Got Initial Solution" << endl;
   
   // cout << endl;
-  // cout << "----------------------------------------------------------------------------" << endl;
+  // cout << "-----------------------------------------------------" << endl;
   // cout << "x0 = " << init_res.at("x") << ";" << endl;
-  // cout << "----------------------------------------------------------------------------" << endl;
+  // cout << "-----------------------------------------------------" << endl;
+  //*******************************************************************************
 
+  // Setup [elements] of (cost function) --> (a*[robustness] + b*[trajectory length])
+  
+  missionRob(var);
+  MX f;
 
+  // choose between boolean mode and normal mode
   if (boolean_mode){
     f = 0*mxOut.traj_length;
     g.push_back(mxOut.rob);
@@ -1096,15 +1171,20 @@ void AATC::formulateMission(){
     f = lambda*mxOut.traj_length - mxOut.rob;
   }
 
-  myMission.f = f;
-  myMission.x = var;
-  myMission.g = vertcat(g);
-  myMission.x0 = init_res.at("x");
-  myMission.lbx = lbw;
-  myMission.ubx = ubw;
-  myMission.lbg = lbg;
-  myMission.ubg = ubg;
+  cout << "Constructed Cost Function" << endl;
+
+  // populate mission information (for later use in optimazation problem)
+  myMission.f = f;                      // cost function
+  myMission.x = var;                    // state variables
+  myMission.g = vertcat(g);             // contriants
+  myMission.x0 = init_res.at("x");      // initial guess
+  myMission.lbx = lbw;                  // lower bounds on state
+  myMission.ubx = ubw;                  // upper bounds on state
+  myMission.lbg = lbg;                  // lower bounds on constraints
+  myMission.ubg = ubg;                  // upper bounds on constraints
   
+  // prepare some structure for distributed approach
+  //***********************************************************
   int nVar = var.size1();
   int nG = DM(lbg).size1();
 
@@ -1119,59 +1199,50 @@ void AATC::formulateMission(){
 
   lba = vertsplit(DM(lbg), nG/nDrones);
   uba = vertsplit(DM(ubg), nG/nDrones);
-
-  // return out;
+  //***********************************************************
 }
 
 void AATC::solveCentralized(){
   
+  // Define optimization problem
   MXDict prob;
-  prob["f"] = myMission.f;
-  prob["x"] = myMission.x;
-  prob["g"] = myMission.g;
+
+  prob["f"] = myMission.f;      // cost function
+  prob["x"] = myMission.x;      // state variables
+  prob["g"] = myMission.g;      // constraints
 
   DMDict args;
-  args["x0"] = myMission.x0; //init_res.at("x");
-  args["lbx"] = myMission.lbx;
-  args["ubx"] = myMission.ubx;
-  args["lbg"] = myMission.lbg;
-  args["ubg"] = myMission.ubg;
+  args["x0"] = myMission.x0;    // initial guess
+  args["lbx"] = myMission.lbx;  // lower bounds on state
+  args["ubx"] = myMission.ubx;  // upper bounds on state
+  args["lbg"] = myMission.lbg;  // lower bounds on constraints
+  args["ubg"] = myMission.ubg;  // upper bounds on constraints
 
-
+  // set options for nlp optimization solver
+  //***********************************************************
   Dict Opts, ipoptOpts;
-  ipoptOpts["linear_solver"] = "ma27";
+  ipoptOpts["linear_solver"] = "ma27";    // using HSL routines
   ipoptOpts["print_level"] = 0;
   ipoptOpts["acceptable_tol"] = 1e-6;
   ipoptOpts["tol"] = 1e-6;
   ipoptOpts["max_iter"] = 5000;
   ipoptOpts["hessian_approximation"] = "limited-memory";
   Opts["ipopt"] = ipoptOpts;
+  //***********************************************************
 
+  // initialize solver (ipopt used)
   Function solver = nlpsol("solver", "ipopt", prob, Opts);  
 
+  // solve optimization problem with set arguments, measure time taken to solve
   t = clock();
-  DMDict res = solver(args);
+  res = solver(args);
   t = clock() - t;
 
   // get the trajectories and individual robustness
   missionRob(res.at("x"));
-  cout << endl;
-  cout << "Optimal cost:                     " << double(res.at("f")) << endl;
-  cout << "smooth robustness :               " << dmOut.rob << endl;
-  cout << "separation_robustness :           " << dmOut.sepRob << endl;
-  cout << "goal_robustness :                 " << dmOut.goalRob << endl;
-  cout << "unsafe_robustness :               " << dmOut.unsafeRob << endl;
-  cout << "total trajectory length :         " << dmOut.traj_length << endl;
-
-
-  time_centralized = ((float)t)/CLOCKS_PER_SEC;
-  cout << endl;
-  cout << "----------------------------------------------------------------------------" << endl;
-  cout << "cpp_out = " << res.at("x") << ";" << endl;
-  cout << "----------------------------------------------------------------------------" << endl;
-  cout << "Solving took "<< time_centralized <<" second(s8)."<< endl;
 }
 
+// Experimental
 void AATC::solveDistributed(){
 
   DM x =  myMission.x0;

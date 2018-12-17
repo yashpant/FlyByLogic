@@ -10,24 +10,25 @@ using namespace Eigen;
 
 // struct to define mission parameters
 struct missionStruct {
-    int nDrones;         // number of drones in mission
-    float Horizon;       // length of mission in seconds
-    float h;             // sampling time
-    float minSep;        // time step intervals
-    vector<vector<double>> obs;        // obstacles
-    vector<vector<double>> goal;       // goal
-    vector<vector<double>> droneGoal;
-    float k1t;
-    float k2t;
-    int npt;
-    float T;
-    vector<vector<double>> p0;
-    vector<vector<double>> v0;
+    int nDrones;                        // number of drones in mission
+    float Horizon;                      // length of mission in seconds
+    float h;                            // sampling time
+    float minSep;                       // time step intervals
+    vector<vector<double>> obs;         // obstacles
+    vector<vector<double>> goal;        // goal
+    vector<vector<double>> droneGoal;   // goal intervals
+    float k1t;                          // spline constant 1
+    float k2t;                          // spline constant 2
+    int npt;                            // waypoints per time interval
+    float T;                            // time interval between major waypoints
+    vector<vector<double>> p0;          // initial positions of drones
+    vector<vector<double>> v0;          // initial velocities of drones
+    vector<vector<double>> v_bounds;    // bounds on velocities and accelerations of drones
 
-    DM M;
-    DM A;
-    DM Hmat;
-    ArrayXXi sched;
+    DM M;                               // min jerk trajectory spline charateristic matrix
+    DM A;                               // for distributed implementation (experimental)
+    DM Hmat;                            // for distributed implementation (experimental)
+    ArrayXXi sched;                     // for distributed implementation (experimental)
 };
 
 struct mission {
@@ -117,6 +118,8 @@ class AATC {
 
         void printMission(ostream& out);
 
+        void printMissionOutput(ostream& out);
+
         void set_nDrones(int n);
 
         double get_robustness();
@@ -157,6 +160,7 @@ class AATC {
         // distributes AATC variables
         //SpDict qp;
         Dict qpoasesOpts;
+        DMDict res;
 
         vector<DM> lbx_vec;
         vector<DM> ubx_vec;
