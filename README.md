@@ -12,4 +12,4 @@ Includes code to run simulation examples from Pant et al.,FlyByLogic, ICCPS 2018
 
 Run the RunAllExamples.m file. Edit parameters in individual files called in it to run different cases. If you have the hsl routines, change the solver from mumps to ma27 in the solver options for the individual files.
 
-[comment:] <> A GUI based front end to specify generalized reach-avoid missions is under development and will be added here.
+
