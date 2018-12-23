@@ -1,3 +1,4 @@
+%%
 function varargout = Mission_Gui(varargin)
 % MISSION_GUI MATLAB code for Mission_Gui.fig
 %      MISSION_GUI, by itself, creates a new MISSION_GUI or raises the existing
@@ -7,7 +8,7 @@ function varargout = Mission_Gui(varargin)
 %      the existing singleton*.
 %
 %      MISSION_GUI('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MISSION_GUI.M with the given input arguments.
+%      function named CALLBA    CK in MISSION_GUI.M with the given input arguments.
 %
 %      MISSION_GUI('Property','Value',...) creates a new MISSION_GUI or raises the
 %      existing singleton*.  Starting from the left, property value pairs are
@@ -22,16 +23,16 @@ function varargout = Mission_Gui(varargin)
 
 % Edit the above text to modify the response to help Mission_Gui
 
-% Last Modified by GUIDE v2.5 09-Jul-2018 16:25:51
+% Last Modified by GUIDE v2.5 14-Dec-2018 12:53:37
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Mission_Gui_OpeningFcn, ...
-                   'gui_OutputFcn',  @Mission_Gui_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @Mission_Gui_OpeningFcn, ...
+    'gui_OutputFcn',  @Mission_Gui_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -52,21 +53,23 @@ function Mission_Gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Mission_Gui (see VARARGIN)
 
+disp(pwd);
 addpath('../MiscFunctions');
 addpath('../Maps_mrsl');
 addpath('../CaseStudy/subfunctions');
 addpath('../CaseStudy');
 addpath('../Missions');
+addpath('../AATC_cpp');
 
 % Choose default command line output for Mission_Gui
 handles.output = hObject;
-     
+
 % Populate Table with Defaults
-Mission_Table  = findobj('Tag','Mission_Table_tag');
-d = {'Drone1','[2,2,6]','[0 5; 5 10]'};
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
+d = {'Drone1','[2,2,6]','[2 4]','[0 5; 5 10]'};
 set(Mission_Table, 'Data', d);
 cur_cols = get(Mission_Table, 'ColumnName');
-set(Mission_Table, 'ColumnName', cur_cols(1:3))
+set(Mission_Table, 'ColumnName', cur_cols(1:4))
 
 dat = Mission_Table.Data;
 t_size = size(dat);
@@ -75,11 +78,12 @@ drone_goals = cell(t_size(1),1);
 
 for i = 1:t_size(1)
     init_pos(:,i) = str2num(dat{i,2})'; %#ok<AGROW>
-    for j = 1:t_size(2)-2
-        if ischar(dat{i,j+2})
-            old_dat = str2num(dat{i,j+2});
+    V_bounds{i} = str2num(dat{i,3});
+    for j = 1:t_size(2)-3%%%%%%%%%%%%%%%why this%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+        if ischar(dat{i,j+3})
+            old_dat = str2num(dat{i,j+3});
         else
-            old_dat = dat{i,j+2};
+            old_dat = dat{i,j+3};
         end
         
         if (size(old_dat))
@@ -90,6 +94,7 @@ for i = 1:t_size(1)
     end
 end
 
+handles.myhandle.V_bounds = V_bounds;
 handles.myhandle.drone_goals = drone_goals;
 handles.myhandle.init_pos = init_pos;
 handles.myhandle.N_drones = 1;
@@ -119,13 +124,21 @@ dminEditText = findobj('Tag','dminEditText');
 dminEditText.String = '0.1';
 handles.myhandle.d_min = 0.1;
 
-horizonEditText = findobj('Tag','horizonEditText');
-horizonEditText.String = '20';
-handles.myhandle.Horizon = 20;
+edit8 = findobj('Tag','edit8');
+edit8.String = '1';
+handles.myhandle.T = 1;
+
+edit9 = findobj('Tag','edit9');
+edit9.String = '30';
+handles.myhandle.C = 30;
 
 samplingEditText = findobj('Tag','samplingEditText');
 samplingEditText.String = '0.05';
 handles.myhandle.sampling_time = 0.05;
+
+horizonEditText = findobj('Tag','horizonEditText');
+horizonEditText.String = '20';
+handles.myhandle.Horizon = 20;
 
 handles = updateEnvironment(handles);
 view(handles.disp_axes, -60, 10);
@@ -139,6 +152,22 @@ set(handles.missionLoaded_data, 'String', 'default');
 handles.missionToLoad = '../Missions/default.mat';
 handles %#ok<NOPRT>
 % Update handles structure
+%Code to add Latex in static text boxes%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% handles.laxis = axes('parent',hObject,'units','normalized','position',[0 0 1 1],'visible','off');
+% % Find all static text UICONTROLS whose 'Tag' starts with latex_
+% lbls = findobj(hObject,'-regexp','tag','latex_*');
+% for i=1:length(lbls)
+%       l = lbls(i);
+%       % Get current text, position and tag
+%       set(l,'units','normalized');
+%       s = get(l,'string');
+%       p = get(l,'position');
+%       t = get(l,'tag');
+%       % Remove the UICONTROL
+%       delete(l);
+%       % Replace it with a TEXT object
+%       handles.(t) = text(p(1),p(2),s,'interpreter','latex');
+% end
 guidata(hObject, handles);
 
 % UIWAIT makes Mission_Gui wait for user response (see UIRESUME)
@@ -146,7 +175,7 @@ guidata(hObject, handles);
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Mission_Gui_OutputFcn(hObject, eventdata, handles) 
+function varargout = Mission_Gui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -159,7 +188,7 @@ function handles = update_mission(handles)
 %  collect drone goal interval data
 
 % Get mission table object
-Mission_Table  = findobj('Tag','Mission_Table_tag');
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
 
 % Get data from mission table
 dat = Mission_Table.Data;
@@ -169,19 +198,30 @@ t_size = size(dat);
 
 % Make a container to keep track of goal intervals for each drone
 drone_goals = cell(t_size(1),1);
+V_bounds = cell(t_size(1),1);
 
+% loop over # of rows in Table
 for i = 1:t_size(1)
+    % get initial positions (column 2)
     if (size(dat{i,2}))
         init_pos(:,i) = str2num(dat{i,2})';
     else
         disp('Please specify all initial positions')
     end
     
-    for j = 1:t_size(2)-2
-        if ischar(dat{i,j+2})
-            old_dat = str2num(dat{i,j+2});
+    % get v and a bounds (column 3)
+    if (size(dat{i,3}))
+        V_bounds{i} = str2num(dat{i,3});
+    else
+        disp('Please specify all Velocity and Acceleration bounds')
+    end
+    
+    % gather goal intervals (column 4+)
+    for j = 1:t_size(2)-3
+        if ischar(dat{i,j+3})
+            old_dat = str2num(dat{i,j+3});
         else
-            old_dat = dat{i,j+2};
+            old_dat = dat{i,j+3};
         end
         
         if (size(old_dat))
@@ -195,6 +235,8 @@ end
 disp('Updated Mission Table');
 handles.myhandle.init_pos = init_pos;
 handles.myhandle.drone_goals = drone_goals;
+handles.myhandle.V_bounds = V_bounds;
+
 
 % Resize the table for numDrones and num Goals
 function handles = update_mission_table(handles)
@@ -206,7 +248,7 @@ N_goals = get(handles.ngoalsPopupmenu, 'Value');
 % handles.myhandle.N_drones = N_drones;
 
 % Get mission table object
-Mission_Table  = findobj('Tag','Mission_Table_tag');
+Mission_Table  = findobj('Tag','latex_Mission_Table_tag');
 
 % Get data from mission table
 cur_table = get(Mission_Table, 'Data');
@@ -216,7 +258,7 @@ cur_cols = get(Mission_Table, 'ColumnName');
 [N1,M1] = size(cur_table);
 
 % Make new table
-new_table = cell(N_drones, N_goals+2);
+new_table = cell(N_drones, N_goals+3);
 [N2,M2] = size(new_table);
 
 for i = 1:N2
@@ -227,11 +269,11 @@ for i = 1:N2
     end
 end
 
-cur_cols(3:end) = [];
+cur_cols(4:end) = [];
 
 % Update Mission table header
 for i = 1: N_goals
-    cur_cols(i+2) = {['Goal',num2str(i)]};
+    cur_cols(i+3) = {['Goal',num2str(i)]};
 end
 
 
@@ -333,9 +375,9 @@ names = {filename.name};
 set(hObject, 'String', names);
 
 
-% --- Executes when entered data in editable cell(s) in Mission_Table_tag.
-function Mission_Table_tag_CellEditCallback(hObject, eventdata, handles)
-% hObject    handle to Mission_Table_tag (see GCBO)
+% --- Executes when entered data in editable cell(s) in latex_Mission_Table_tag.
+function latex_Mission_Table_tag_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to latex_Mission_Table_tag (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Indices: row and column indices of the cell(s) edited
 %	PreviousData: previous data for the cell(s) edited
@@ -375,6 +417,7 @@ end
 
 % Update the Goal Table with the new table
 set(Goal_Table, 'Data', new_table);
+handles = update_goals(handles);
 
 % Populate handles with updated goals
 function handles = update_goals(handles)
@@ -398,10 +441,12 @@ for i = 1:t_size(1)
     else
         array = (dat{i,1})';
     end
-    goal{i}.lb = array(1:3);
-    goal{i}.ub = array(4:6);
-    goal{i}.stop = 0.5*(array(1:3) + array(4:6));
-    goal{i}.col = 'green';
+    if ~isempty(array)
+        goal{i}.lb = array(1:3);
+        goal{i}.ub = array(4:6);
+        goal{i}.stop = 0.5*(array(1:3) + array(4:6));
+        goal{i}.col = 'green';
+    end
 end
 
 disp('Updated goals');
@@ -642,14 +687,213 @@ function planButton_Callback(hObject, eventdata, handles)
 set(handles.missionStatus_data, 'String', 'Not Ready');
 
 % Do routine error checks
-% Check all 
+% Check all
 disp('Planning Mission....');
-[handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
-Plan_Time = handles.myhandle.time_taken
+
+% Write to file
+fileID = fopen('../Missions/current_mission.txt','w');
+fprintf(fileID,'Printing Mission Details\n');
+fprintf(fileID,'*******************************\n\n');
+fprintf(fileID,'Number of Drones     :  %d\n', handles.myhandle.N_drones);
+fprintf(fileID,'Number of Obstacles  :  %d\n', size(handles.myhandle.obs),1);
+fprintf(fileID,'Number of Goals      :  %d\n', length(handles.myhandle.goal));
+fprintf(fileID,'Waypoint Interval    :  %4.2f (s)\n', handles.myhandle.T);
+fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
+fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);
+fprintf(fileID,'Minimum Separation   :  %4.2f (m)\n', handles.myhandle.d_min);
+
+fprintf(fileID, '\nInitial Positions and limits\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Drone#  : [x0, y0, z0, v_max, a_max]\n');
+
+for i = 1:size(handles.myhandle.init_pos,2)
+    fprintf(fileID, 'Drone%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.init_pos(:,i), handles.myhandle.V_bounds{i});
+end
+
+fprintf(fileID, '\nObstacles\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+
+for i = 1:size(handles.myhandle.obs,1)
+    fprintf(fileID, 'Obstacle%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.obs{i}.lb, handles.myhandle.obs{i}.ub);
+end
+
+fprintf(fileID, '\nGoals\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Goal#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+
+disp(size(handles.myhandle.goal,1))
+for i = 1:size(handles.myhandle.goal,1)
+    fprintf(fileID, 'Goal%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.goal{i}.lb, handles.myhandle.goal{i}.ub);
+end
+
+fprintf(fileID, '\nGoal Intervals\n');
+fprintf(fileID, '-----------------------\n');
+fprintf(fileID, 'Spec#  : [Drone#, Goal#, iStart, iEnd]\n');
+count = 0;
+
+for i = 1:size(handles.myhandle.drone_goals,1)
+    for j = 1:size(handles.myhandle.drone_goals{i})
+        arr = [count, i, handles.myhandle.drone_goals{i}(j,:)] - [0 1 1 0 0];
+        fprintf(fileID, 'Spec%d  : [%d, %d, %d, %d]\n', arr);
+        count = count + 1;
+    end
+end
+
+fclose(fileID);
+
+% call C++ gui_interface
+!./../AATC_cpp/bin/Gui_Interface
+
+% read info from output file
+fileID = fopen('../Missions/current_mission_output.txt');
+
+while ~feof(fileID)
+    line = fgets(fileID); % read in one line
+    if strfind(line,'Mission Results')
+        continue;
+    elseif strfind(line,'Mission Results')
+        continue;
+    elseif strfind(line,'****')
+        continue;
+    elseif strfind(line,'------')
+        continue;
+    elseif strfind(line,'w_opt')
+        handles.myhandle.w_opt = str2num(line(8:end));
+        continue;
+    elseif strfind(line,'Time Taken')
+        handles.myhandle.time_taken = str2num(line(13:end-10));
+        continue;
+    end
+end
+
+fclose(fileID);
+
+% Get optParams (work around)
+% How many drones?
+N_drones = handles.myhandle.N_drones;
+
+% Drone Minimum Separation
+d_min = handles.myhandle.d_min;
+
+% How long is the missions
+
+
+H_formula = handles.myhandle.Horizon;
+
+% Set Sampling Time 
+h = handles.myhandle.sampling_time;
+
+% Separation of waypoints
+%T = 1; %1s duration of motion
+T = handles.myhandle.T;
+% C = handles.myhandle.C;
+V_bounds = handles.myhandle.V_bounds;
+
+% Map and obstacles
+map = handles.myhandle.map;
+obs = handles.myhandle.obs;
+
+% goals
+goal = handles.myhandle.goal;
+
+drone_goals = handles.myhandle.drone_goals;
+
+% init_pos
+init_pos = handles.myhandle.init_pos;
+%% Generate Constraints for Trajectory
+
+% Initialize Tracker Variables
+
+M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
+
+% Tracker limits
+max_per_axis = 2;
+%Should be in GUI%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Also make GUI for C.
+% max_vel = 2; 
+% max_accl = 4;
+% max_vel = V_bounds(1);
+% max_accl = V_bounds(2);
+
+% From vel constraints on pf
+K1_T = (90/48)*(1/T) - (90/12)*(1/T) +(30/4)*(1/T);
+
+% From accl constraints on pf
+aa =  (90/4)*(1/T^5);
+bb = -(90/2)*(1/T^4);
+cc =  (30/2)*(1/T^3);
+
+tp1 = (-bb+sqrt(bb^2-4*aa*cc))/(2*aa);
+tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
+
+% Pick the right one
+t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); 
+
+K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
+    (30/2)*(t_prime)/(T^3);
+
+% Set Initial Random Initial Positions
+if(0) 
+    % Randon Initial Position of Drones
+    p0 = random_p0_generator(map,obs,N_drones);
+else
+    p0 = init_pos;
+end
+
+% Initial Velocities (Start from Rest)
+v0 = zeros(3,N_drones);
+
+% Zero Initial Jerk and Acceleration
+da = 0;
+dv = 0;
+
+% Total Number of steps (per Drone)
+Nsteps = H_formula*(T/h);
+
+Clen = 3*(H_formula+1);
+
+% Populate optParams structure
+optParams.N_drones = N_drones;
+optParams.d_min = d_min;
+optParams.Clen = Clen;
+optParams.T = T;
+optParams.M1 = M1;
+optParams.K1_T = K1_T;
+optParams.K2_tprime = K2_tprime;
+optParams.da = da;
+optParams.dv = dv;
+optParams.H_formula = H_formula;
+optParams.N_per_T = T/h;
+optParams.goal = goal;
+optParams.drone_goals = drone_goals;
+optParams.obs = obs;
+optParams.map = map;
+% optParams.max_vel = max_vel; 
+%optParams.max_accl = max_accl;
+optParams.max_per_axis = max_per_axis;
+optParams.sampling_time = h;
+% optParams.C = C;
+optParams.V_bounds = V_bounds;
+
+for i = 1:numel(obs)
+optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
+optParams.obs_ub_N{i} = repmat(obs{i}.ub,Nsteps+1,1);
+end
+
+for i = 1:numel(goal)
+optParams.goal{i}.goal_lb_N = repmat(goal{i}.lb',Nsteps+1,1);
+optParams.goal{i}.goal_ub_N = repmat(goal{i}.ub',Nsteps+1,1);
+end
+
+handles.myhandle.optParams = optParams;
+if (0)
+    [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
+end
+
+% Plan_Time = handles.myhandle.time_taken
 set(handles.missionStatus_data, 'String', 'Ready');
 
 guidata(hObject, handles)
-
 
 
 function missionnameEditText_Callback(hObject, eventdata, handles)
@@ -683,7 +927,7 @@ function saveButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-handles.myhandle.missionTable = get(handles.Mission_Table_tag, 'Data');
+handles.myhandle.missionTable = get(handles.latex_Mission_Table_tag, 'Data');
 handles.myhandle.obstacleTable = get(handles.Obstacle_Table_tag, 'Data');
 handles.myhandle.goalTable = get(handles.Goal_Table_tag, 'Data');
 
@@ -727,6 +971,9 @@ set(handles.horizonEditText, 'String', handles.myhandle.Horizon);
 % load Samp. Freq
 set(handles.samplingEditText, 'String', handles.myhandle.sampling_time);
 
+% % load Time BTW waypoints
+% set(handles.edit8, 'String', handles.myhandle.T);
+
 % load drone min sep
 set(handles.dminEditText, 'String', handles.myhandle.d_min);
 
@@ -737,7 +984,7 @@ set(handles.missionnameEditText, 'String', handles.myhandle.mission_name);
 set(handles.missionLoaded_data, 'String', handles.myhandle.mission_name);
 
 % populate tables
-set(handles.Mission_Table_tag, 'Data', handles.myhandle.missionTable);
+set(handles.latex_Mission_Table_tag, 'Data', handles.myhandle.missionTable);
 set(handles.Obstacle_Table_tag, 'Data', handles.myhandle.obstacleTable);
 set(handles.Goal_Table_tag, 'Data', handles.myhandle.goalTable);
 
@@ -750,6 +997,7 @@ catch
 end
 
 % Update environment
+handles = update_mission_table(handles);
 handles = updateEnvironment(handles);
 
 guidata(hObject, handles)
@@ -793,3 +1041,61 @@ filename = dir('../Missions/*.mat');
 names = {filename.name};
 
 set(hObject,'String',names);
+
+
+
+function edit8_Callback(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit8 as text
+%        str2double(get(hObject,'String')) returns contents of edit8 as a double
+handles.myhandle.T = str2num(hObject.String);
+disp('Updated Waypoint Interval');
+guidata(hObject, handles)
+
+
+% --- Executes during object creation, after setting all properties.
+function edit8_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit8 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit9_Callback(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit9 as text
+%        str2double(get(hObject,'String')) returns contents of edit9 as a double
+handles.myhandle.C = str2num(hObject.String);
+disp('Updated Smoothing Constant');
+guidata(hObject, handles)
+
+% --- Executes during object creation, after setting all properties.
+function edit9_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes during object creation, after setting all properties.
+function latex_Mission_Table_tag_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to latex_Mission_Table_tag (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called

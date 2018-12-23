@@ -6,8 +6,9 @@ M1 = optParams.M1;
 T = optParams.T;
 K1_T = optParams.K1_T;
 K2_tprime = optParams.K2_tprime;
-max_vel=optParams.max_vel;
-max_accl=optParams.max_accl;
+% max_vel=optParams.max_vel;
+% max_accl=optParams.max_accl;
+V_bounds = optParams.V_bounds;
 da = optParams.da;
 
 % Randomize (If more than 2 drones)
@@ -36,15 +37,15 @@ for i = 2:H+1
         
         %enforce w dynamics
         % ww(i,j) == (al/120)*T^5 + (be/24)*T^4 + (gam/6)*T^3 + vv(i-1)*T + ww(i-1,j);
-        K1_T*(ww(i,j)-ww(i-1,j))+(1-T*K1_T)*vv(i-1,j)<=max_vel;
-        K1_T*(ww(i,j)-ww(i-1,j))+(1-T*K1_T)*vv(i-1,j)>=-max_vel;
-        K2_tprime*(ww(i,j)-ww(i-1,j))-T*K2_tprime*vv(i-1,j)<=max_accl;
-        K2_tprime*(ww(i,j)-ww(i-1,j))-T*K2_tprime*vv(i-1,j)>=-max_accl;
+        K1_T*(ww(i,j)-ww(i-1,j))+(1-T*K1_T)*vv(i-1,j)<=V_bounds(1);
+        K1_T*(ww(i,j)-ww(i-1,j))+(1-T*K1_T)*vv(i-1,j)>=-V_bounds(1);
+        K2_tprime*(ww(i,j)-ww(i-1,j))-T*K2_tprime*vv(i-1,j)<=V_bounds(2);
+        K2_tprime*(ww(i,j)-ww(i-1,j))-T*K2_tprime*vv(i-1,j)>=-V_bounds(2);
         
         %enforce v
         vv(i,j) == (al/24)*T^4 + (be/6)*T^3 + (gam/2)*T^2 + vv(i-1,j);
-        vv(i,j) <= max_vel;
-        vv(i,j) >= -max_vel;        
+        vv(i,j) <= V_bounds(1);
+        vv(i,j) >= -V_bounds(1);        
    
     end
 end

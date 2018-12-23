@@ -9,12 +9,12 @@ v = var(numel(var)/2+1:end);
 
 % assign intervals for goals
 N_per_T = optParams.N_per_T;
-optParams
 % 50 works for 2 drones, 2 works for rural mission
-C = 30.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
+%C = 30.0; %const for smooth min/max operation %for 2 drones, use 10 with a period of 5s, casadi is unstable numerically
 C1 =30.0; %const for smooth max %20 works for 10 drones, det init points
 C2 =30.0; %5 makes no numerical instblty in 12 drones
-optParams.C = C;
+%optParams.C = C;
+C = optParams.C;
 optParams.C1 = C1;
 optParams.C2 = C2;
 

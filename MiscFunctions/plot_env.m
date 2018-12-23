@@ -15,8 +15,10 @@ map = load_map(map_name, .5, .5, 0);
 % Plot goals with color if goals exist
 if(~isempty(goal{1}))
     for i = 1:length(goal)
-        goal{i}.poly = Polyhedron('lb',goal{i}.lb,'ub',goal{i}.ub);
-        plot(goal{i}.poly,'Color',goal{i}.col,'alpha',0.5); hold on;
+        if ~isempty(goal{i})
+            goal{i}.poly = Polyhedron('lb',goal{i}.lb,'ub',goal{i}.ub);
+            plot(goal{i}.poly,'Color',goal{i}.col,'alpha',0.5); hold on;
+        end
     end
 end
 
@@ -27,7 +29,7 @@ end
 
 % Set bounds with margin m
 b = map.boundary;
-m = 2.5;
+m = 0.5;
 
 axis ([b(1)-m b(4)+m b(2)-m b(5)+m b(3)-m b(6)+m]);
 
