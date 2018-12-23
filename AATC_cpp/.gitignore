@@ -1,5 +1,6 @@
 /runtime_logs/*
 /CMakeFiles
+/examples
 /Makefile
 /bin
 /lib
