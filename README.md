@@ -1,7 +1,10 @@
 # FlyByLogic
-### Requirements
+Below are the three steps to be followed to Solve and visualize the missions.
+### STEP-1: Requirements
 1. **IPOPT**
 2. **casadi** (With Ipopt and QPOASES)
+3. **MPT3** Toolbox
+4. **CVX**
 
 #### Reference https://github.com/casadi/casadi/wiki/SourceBuild
 
@@ -62,8 +65,14 @@ Now build CasADi from source:
 make
 sudo make install
 ```
+#### MPT3 Tool box 
+MPT 3.+ toolbox: Follow the installation instructions in http://people.ee.ethz.ch/~mpt/3/
 
-## Setting up AATC before running the Mission_GUI.m
+#### CVX
+Download the CVX contents from http://cvxr.com/cvx/download/. Follow the instructions listed in the website to setup CVX
+
+
+## STEP-2: Setting up AATC before running the Mission_GUI.m
 Run the following commands in terminal;
 ```
 cd AATC_cpp/src/AATC
@@ -72,13 +81,16 @@ make
 ./bin/FBL
 ```
 
-## Running the Code
-To Visulaize default missions which are already saved, run RunAllExamples.m
+## STEP-3: Running the Code
+To Visulaize default missions which are already saved, run RunAllExamples.m. Edit parameters in individual files called in it to run different cases. If you have the hsl routines, change the solver from mumps to ma27 in the solver options for the individual files.
+
 To perform custom missions open and run GUI/Mission_GUI.m
+
 See the instructions listed in GUI User Manual.pdf
 
 ## Note
 Make sure that Casadi, CVX, MPT3 are in the right path.
+
 Mission_GUI.m will invoke AATC_cpp by default to plan the mission. This can be changed to Matlab solver by XXXXXXXXXXX. However C++ solver is faster the Matlab solver by XXXX sec.
 
 
