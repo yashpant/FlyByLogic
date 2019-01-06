@@ -63,7 +63,7 @@ make
 sudo make install
 ```
 
-## Running AATC
+## Setting up AATC before running the Mission_GUI.m
 Run the following commands in terminal;
 ```
 cd AATC_cpp/src/AATC
@@ -71,3 +71,15 @@ cmake .
 make
 ./bin/FBL
 ```
+
+## Running the Code
+To Visulaize default missions which are already saved, run RunAllExamples.m
+To perform custom missions open and run GUI/Mission_GUI.m
+See the instructions listed in GUI User Manual.pdf
+
+## Note
+Make sure that Casadi, CVX, MPT3 are in the right path.
+Mission_GUI.m will invoke AATC_cpp by default to plan the mission. This can be changed to Matlab solver by XXXXXXXXXXX. However C++ solver is faster the Matlab solver by XXXX sec.
+
+
+
