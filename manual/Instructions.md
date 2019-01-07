@@ -75,19 +75,21 @@ Download the CVX contents from http://cvxr.com/cvx/download/. Follow the instruc
 
 ## Setting up the C++ backend
 
-Run the following commands in terminal;
+Run the following commands in terminal (from the top level directory in this repository);
+
+```
 cd AATC_cpp/src/AATC
 cmake .
 make
 ./bin/FBL
-
+```
 
 ## Mission planning via the MATLAB GUI
 To perform custom missions, naviagate (in MATLAB) to the GUI folder and run Mission_GUI.m
 
 See the instructions listed in GUI User Manual.pdf
 
-#####Note
+####Note
 Make sure that Casadi, CVX, MPT3 are in the right path.
 
 Mission_GUI.m will invoke AATC_cpp by default to plan the mission. This can be changed to Matlab solver by XXXXXXXXXXX. However C++ solver is faster the Matlab solver by XXXX sec.
