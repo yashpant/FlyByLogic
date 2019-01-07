@@ -1,5 +1,7 @@
 # FlyByLogic
 
+The following instructions are for compiling the tool (and dependencies) and running it on a unix-based computer (tested on Ubuntu 16.04).
+
 ### Requirements
 
 1. IPOPT
@@ -89,7 +91,7 @@ To perform custom missions, naviagate (in MATLAB) to the GUI folder and run Miss
 
 See the instructions listed in GUI User Manual.pdf
 
-####Note
+*Note*:
 Make sure that Casadi, CVX, MPT3 are in the right path.
 
-Mission_GUI.m will invoke AATC_cpp by default to plan the mission. This can be changed to Matlab solver by XXXXXXXXXXX. However C++ solver is faster the Matlab solver by XXXX sec.
+Instructions for Windows will be added at a later date.
