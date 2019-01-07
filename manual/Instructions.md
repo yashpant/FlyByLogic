@@ -83,7 +83,6 @@ Run the following commands in terminal (from the top level directory in this rep
 cd AATC_cpp/src/AATC
 cmake .
 make
-./bin/FBL
 ```
 
 ## Mission planning via the MATLAB GUI
