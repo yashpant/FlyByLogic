@@ -25,6 +25,7 @@ On Linux and Mac OS X, IPOPT can be compiled from sources. You will find instruc
 - Compile and install IPOPT. Compiling `-fPIC` often helps:
  * `../configure --prefix=/usr/local ADD_FFLAGS=-fPIC ADD_CFLAGS=-fPIC ADD_CXXFLAGS=-fPIC`
  * `make; sudo make install`
+ If gfortran is not installed, run: ..."sudo apt-get install gfortran"
  * If you wish to compile IPOPT with support for parametric sensitivities (sIPOPT), follow the instructions below.
 - Test if `pkg-config` is able to find your Ipopt installation:
  * `pkg-config --libs ipopt`
