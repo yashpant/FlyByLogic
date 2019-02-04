@@ -1,6 +1,6 @@
 # FlyByLogic
 
-See documentation in the manual folder for details on the user interface. 
+See the Documentation folder for details on the user interface and installation. 
 
 Requirements:
 MPT 3.+ toolbox: http://people.ee.ethz.ch/~mpt/3/
