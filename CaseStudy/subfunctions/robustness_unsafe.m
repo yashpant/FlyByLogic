@@ -18,6 +18,18 @@ for j = 1:size(optParams.obs,1)
 %   Detailed explanation goes here
 
   % always not unsafe in x y z
+  if optParams.obs{1}.lb(1) == inf
+      rho_lb_xx = xx(:,d)-optParams.obs_lb_N(:,1);
+    rho_ub_xx = optParams.obs_ub_N(:,1)-xx(:,d);
+    %rho_xx = SmoothMin([rho_lb_xx;rho_ub_xx],C);
+    
+    rho_lb_yy = yy(:,d)-optParams.obs_lb_N(:,2);
+    rho_ub_yy = optParams.obs_ub_N(:,2)-yy(:,d);
+    %rho_yy = SmoothMin([rho_lb_yy;rho_ub_yy],C);
+    
+    rho_lb_zz = zz(:,d)-optParams.obs_lb_N(:,3);
+    rho_ub_zz = optParams.obs_ub_N(:,3)-zz(:,d);
+  else
     rho_lb_xx = xx(:,d)-optParams.obs_lb_N{j}(:,1);
     rho_ub_xx = optParams.obs_ub_N{j}(:,1)-xx(:,d);
     %rho_xx = SmoothMin([rho_lb_xx;rho_ub_xx],C);
@@ -29,7 +41,7 @@ for j = 1:size(optParams.obs,1)
     rho_lb_zz = zz(:,d)-optParams.obs_lb_N{j}(:,3);
     rho_ub_zz = optParams.obs_ub_N{j}(:,3)-zz(:,d);
     %rho_zz = SmoothMin([rho_lb_zz;rho_ub_zz],C);
-    
+  end
     
     
     % make this more efficient

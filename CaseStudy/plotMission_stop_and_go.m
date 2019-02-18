@@ -1,10 +1,10 @@
-function [rob,save_data] = plotMission(handles)
+function [rob,save_data] = plotMission_stop_and_go(handles)
 
 w_opt = handles.myhandle.w_opt;
 optParams = handles.myhandle.optParams;
 time_print = handles.timeElapsed_data;
 
-[negative_rob, xx,yy,zz] = Mission_Robustness_exact(w_opt,optParams);
+[negative_rob, xx,yy,zz] = Mission_Robustness_exact_stop_and_go(w_opt,optParams);
 rob = -negative_rob;
 
 set(handles.missionRob_data, 'String', sprintf('%.4f',rob));
