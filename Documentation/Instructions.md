@@ -60,7 +60,7 @@ cd build
 
 Generate a makefile and build
 ```
-cmake -DWITH_IPOPT=ON -DWITH_QPOASES -DWITH_LAPACK ..
+cmake -DWITH_IPOPT=ON -DWITH_QPOASES=ON -DWITH_LAPACK=ON ..
 ```
 
 Look at the output and make sure that CMake was able to find the software that you wanted to use together with CasADi. If a certain software was not found correctly, edit the CMakeCache.txt file which should have been generated in your build directory. Note that CasADi will only compile interfaces to software it is able to locate.
