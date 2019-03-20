@@ -23,7 +23,7 @@ function varargout = Mission_Gui(varargin)
 
 % Edit the above text to modify the response to help Mission_Gui
 
-% Last Modified by GUIDE v2.5 14-Dec-2018 12:53:37
+% Last Modified by GUIDE v2.5 20-Mar-2019 11:12:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -103,6 +103,9 @@ Goal_Table  = findobj('Tag','Goal_Table_tag');
 set(Goal_Table,'ColumnName', {'Goals'});
 goal_table = {'[-1,-1,0,1,1,1]'};
 set(Goal_Table, 'Data', goal_table);
+
+handles.myhandle.cswitch = 0;
+handles.myhandle.mswitch = 0;
 
 Obstacle_Table  = findobj('Tag','Obstacle_Table_tag');
 set(Obstacle_Table,'ColumnName', {'Obstacles'});
@@ -690,85 +693,6 @@ set(handles.missionStatus_data, 'String', 'Not Ready');
 % Check all
 disp('Planning Mission....');
 
-% Write to file
-fileID = fopen('../Missions/current_mission.txt','w');
-fprintf(fileID,'Printing Mission Details\n');
-fprintf(fileID,'*******************************\n\n');
-fprintf(fileID,'Number of Drones     :  %d\n', handles.myhandle.N_drones);
-fprintf(fileID,'Number of Obstacles  :  %d\n', size(handles.myhandle.obs),1);
-fprintf(fileID,'Number of Goals      :  %d\n', length(handles.myhandle.goal));
-fprintf(fileID,'Waypoint Interval    :  %4.2f (s)\n', handles.myhandle.T);
-fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
-fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);
-fprintf(fileID,'Minimum Separation   :  %4.2f (m)\n', handles.myhandle.d_min);
-
-fprintf(fileID, '\nInitial Positions and limits\n');
-fprintf(fileID, '-----------------------\n');
-fprintf(fileID, 'Drone#  : [x0, y0, z0, v_max, a_max]\n');
-
-for i = 1:size(handles.myhandle.init_pos,2)
-    fprintf(fileID, 'Drone%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.init_pos(:,i), handles.myhandle.V_bounds{i});
-end
-
-fprintf(fileID, '\nObstacles\n');
-fprintf(fileID, '-----------------------\n');
-fprintf(fileID, 'Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
-
-for i = 1:size(handles.myhandle.obs,1)
-    fprintf(fileID, 'Obstacle%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.obs{i}.lb, handles.myhandle.obs{i}.ub);
-end
-
-fprintf(fileID, '\nGoals\n');
-fprintf(fileID, '-----------------------\n');
-fprintf(fileID, 'Goal#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
-
-disp(size(handles.myhandle.goal,1))
-for i = 1:size(handles.myhandle.goal,1)
-    fprintf(fileID, 'Goal%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.goal{i}.lb, handles.myhandle.goal{i}.ub);
-end
-
-fprintf(fileID, '\nGoal Intervals\n');
-fprintf(fileID, '-----------------------\n');
-fprintf(fileID, 'Spec#  : [Drone#, Goal#, iStart, iEnd]\n');
-count = 0;
-
-for i = 1:size(handles.myhandle.drone_goals,1)
-    for j = 1:size(handles.myhandle.drone_goals{i})
-        arr = [count, i, handles.myhandle.drone_goals{i}(j,:)] - [0 1 1 0 0];
-        fprintf(fileID, 'Spec%d  : [%d, %d, %d, %d]\n', arr);
-        count = count + 1;
-    end
-end
-
-fclose(fileID);
-
-% call C++ gui_interface
-!./../AATC_cpp/bin/Gui_Interface
-
-% read info from output file
-fileID = fopen('../Missions/current_mission_output.txt');
-
-while ~feof(fileID)
-    line = fgets(fileID); % read in one line
-    if strfind(line,'Mission Results')
-        continue;
-    elseif strfind(line,'Mission Results')
-        continue;
-    elseif strfind(line,'****')
-        continue;
-    elseif strfind(line,'------')
-        continue;
-    elseif strfind(line,'w_opt')
-        handles.myhandle.w_opt = str2num(line(8:end));
-        continue;
-    elseif strfind(line,'Time Taken')
-        handles.myhandle.time_taken = str2num(line(13:end-10));
-        continue;
-    end
-end
-
-fclose(fileID);
-
 % Get optParams (work around)
 % How many drones?
 N_drones = handles.myhandle.N_drones;
@@ -781,7 +705,7 @@ d_min = handles.myhandle.d_min;
 
 H_formula = handles.myhandle.Horizon;
 
-% Set Sampling Time 
+% Set Sampling Time
 h = handles.myhandle.sampling_time;
 
 % Separation of waypoints
@@ -810,7 +734,7 @@ M1 = (1/(2*T^5))*[90 0 -15*T^2;-90*T 0 15*T^3;30*T^2 0 -3*T^4];
 % Tracker limits
 max_per_axis = 2;
 %Should be in GUI%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Also make GUI for C.
-% max_vel = 2; 
+% max_vel = 2;
 % max_accl = 4;
 % max_vel = V_bounds(1);
 % max_accl = V_bounds(2);
@@ -827,13 +751,13 @@ tp1 = (-bb+sqrt(bb^2-4*aa*cc))/(2*aa);
 tp2 = (-bb-sqrt(bb^2-4*aa*cc))/(2*aa);
 
 % Pick the right one
-t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T); 
+t_prime = tp1*(tp1>=0)*(tp1<=T) + tp2*(tp2>=0)*(tp2<=T);
 
 K2_tprime = (90/12)*(t_prime^3)/(T^5) - (90/4)*(t_prime^2)/(T^4) + ...
     (30/2)*(t_prime)/(T^3);
 
 % Set Initial Random Initial Positions
-if(0) 
+if(0)
     % Randon Initial Position of Drones
     p0 = random_p0_generator(map,obs,N_drones);
 else
@@ -868,32 +792,178 @@ optParams.goal = goal;
 optParams.drone_goals = drone_goals;
 optParams.obs = obs;
 optParams.map = map;
-% optParams.max_vel = max_vel; 
+% optParams.max_vel = max_vel;
 %optParams.max_accl = max_accl;
 optParams.max_per_axis = max_per_axis;
 optParams.sampling_time = h;
 % optParams.C = C;
 optParams.V_bounds = V_bounds;
 
+%%%%%%%%%%%%%%%%%%%%%%
+% if handles.myhandle.N_ext_obs == 0
+% %     handles.myhandle.obs.lb = [inf,inf,inf];
+% %     handles.myhandle.obs.ub = [inf,inf,inf];
+%     handles.myhandle.optParams.obs{1}.lb = [inf,inf,inf];
+%     handles.myhandle.optParams.obs{1}.ub = [inf,inf,inf];
+% end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i = 1:numel(obs)
-optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
-optParams.obs_ub_N{i} = repmat(obs{i}.ub,Nsteps+1,1);
+    optParams.obs_lb_N{i} = repmat(obs{i}.lb,Nsteps+1,1);
+    optParams.obs_ub_N{i} = repmat(obs{i}.ub,Nsteps+1,1);
 end
 
 for i = 1:numel(goal)
-optParams.goal{i}.goal_lb_N = repmat(goal{i}.lb',Nsteps+1,1);
-optParams.goal{i}.goal_ub_N = repmat(goal{i}.ub',Nsteps+1,1);
+    optParams.goal{i}.goal_lb_N = repmat(goal{i}.lb',Nsteps+1,1);
+    optParams.goal{i}.goal_ub_N = repmat(goal{i}.ub',Nsteps+1,1);
 end
 
+
+
+
 handles.myhandle.optParams = optParams;
-if (0)
-    [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
+
+if handles.myhandle.cswitch == 1
+    % Write to file
+    fileID = fopen('../Missions/current_mission.txt','w');
+    fprintf(fileID,'Printing Mission Details\n');
+    fprintf(fileID,'*******************************\n\n');
+    fprintf(fileID,'Number of Drones     :  %d\n', handles.myhandle.N_drones);
+    fprintf(fileID,'Number of Obstacles  :  %d\n', size(handles.myhandle.obs),1);
+    fprintf(fileID,'Number of Goals      :  %d\n', length(handles.myhandle.goal));
+    fprintf(fileID,'Waypoint Interval    :  %4.2f (s)\n', handles.myhandle.T);
+    fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
+    fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);
+    fprintf(fileID,'Minimum Separation   :  %4.2f (m)\n', handles.myhandle.d_min);
+    
+    fprintf(fileID, '\nInitial Positions and limits\n');
+    fprintf(fileID, '-----------------------\n');
+    fprintf(fileID, 'Drone#  : [x0, y0, z0, v_max, a_max]\n');
+    
+    for i = 1:size(handles.myhandle.init_pos,2)
+        fprintf(fileID, 'Drone%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.init_pos(:,i), handles.myhandle.V_bounds{i});
+    end
+    
+    fprintf(fileID, '\nObstacles\n');
+    fprintf(fileID, '-----------------------\n');
+    fprintf(fileID, 'Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+    
+    for i = 1:size(handles.myhandle.obs,1)
+        if handles.myhandle.optParams.obs{1}.lb == [inf,inf,inf]
+            a = [1.0/0.0,1.0/0.0,1.0/0.0];
+            b = [1.0/0.0,1.0/0.0,1.0/0.0];
+            fprintf(fileID, 'Obstacle%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, a, b);
+        else
+            
+            fprintf(fileID, 'Obstacle%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.obs{i}.lb, handles.myhandle.obs{i}.ub);
+        end
+    end
+    
+    fprintf(fileID, '\nGoals\n');
+    fprintf(fileID, '-----------------------\n');
+    fprintf(fileID, 'Goal#  : [lbx, lby, lbz, ubx, uby, ubz]\n');
+    
+    disp(size(handles.myhandle.goal,1))
+    for i = 1:size(handles.myhandle.goal,1)
+        fprintf(fileID, 'Goal%d  : [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', i-1, handles.myhandle.goal{i}.lb, handles.myhandle.goal{i}.ub);
+    end
+    
+    fprintf(fileID, '\nGoal Intervals\n');
+    fprintf(fileID, '-----------------------\n');
+    fprintf(fileID, 'Spec#  : [Drone#, Goal#, iStart, iEnd]\n');
+    count = 0;
+    
+    for i = 1:size(handles.myhandle.drone_goals,1)
+        for j = 1:size(handles.myhandle.drone_goals{i})
+            arr = [count, i, handles.myhandle.drone_goals{i}(j,:)] - [0 1 1 0 0];
+            fprintf(fileID, 'Spec%d  : [%d, %d, %d, %d]\n', arr);
+            count = count + 1;
+        end
+    end
+    
+    fclose(fileID);
+    
+    % call C++ gui_interface
+    !./../AATC_cpp/bin/Gui_Interface
+    
+    % read info from output file
+    fileID = fopen('../Missions/current_mission_output.txt');
+    
+    while ~feof(fileID)
+        line = fgets(fileID); % read in one line
+        if strfind(line,'Mission Results')
+            continue;
+        elseif strfind(line,'Mission Results')
+            continue;
+        elseif strfind(line,'****')
+            continue;
+        elseif strfind(line,'------')
+            continue;
+        elseif strfind(line,'w_opt')
+            handles.myhandle.w_opt = str2num(line(8:end));
+            continue;
+        elseif strfind(line,'Time Taken')
+            handles.myhandle.time_taken = str2num(line(13:end-10));
+            continue;
+        end
+    end
+    
+    fclose(fileID);
+else
+%     if handles.myhandle.N_ext_obs == 0
+%         %         handles.myhandle.obs.lb = [inf,inf,inf];
+%         %         handles.myhandle.obs.ub = [inf,inf,inf];
+%         handles.myhandle.optParams.obs.lb = [inf,inf,inf];
+%         handles.myhandle.optParams.obs.lb = [inf,inf,inf];
+%     end
+%     if handles.myhandle.stop_and_go ==1
+%     [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission_stop_and_go_beta(handles.myhandle);
+%     else
+             [handles.myhandle.w_opt, handles.myhandle.optParams, handles.myhandle.time_taken] = planMission(handles.myhandle);
+%     end
 end
+
+% if handles.myhandle.N_ext_obs == 0
+%     %     handles.myhandle.obs.lb = [inf,inf,inf];
+%     %     handles.myhandle.obs.ub = [inf,inf,inf];
+%     handles.myhandle.optParams.obs{1}.lb = [inf,inf,inf];
+%     handles.myhandle.optParams.obs{1}.lb = [inf,inf,inf];
+% end
+
+% [negative_rob, xx,yy,zz] = Mission_Robustness_exact(handles.myhandle.w_opt,handles.myhandle.optParams);
+% for d = 1:optParams.N_drones
+%     save_data{d} = [xx(:,d),yy(:,d),zz(:,d)];
+% end
+% 
+% for i = 1:handles.myhandle.N_drones
+%     xlswrite(strcat('output_drone',num2str(i)),save_data{i})
+% end
+% 
+% w_opt = handles.myhandle.w_opt;
+% w_opt = reshape(w_opt,3,size(w_opt,1)/3)';
+% w_opt = w_opt(1:size(w_opt,1)/2,:);
+% 
+% xlswrite('w_opt',w_opt);
+
+
+
+
+
+% fileID = fopen('result.txt','w');
+% fprintf(fileID,'Mission Results\n');
+% fprintf(fileID,'Robustness is : %6.2f \n',-negative_rob);
+% fprintf(fileID,'Time taken for solving the mission is : %6.2f sec \n',handles.myhandle.time_taken);
+% fclose(fileID);
+
+%To base workspace
+% assignin('base','Positions_Drones',save_data);
+% assignin('base','W_opt',handles.myhandle.w_opt);
+% assignin('base','Slow_waypoints',w_opt);
 
 % Plan_Time = handles.myhandle.time_taken
 set(handles.missionStatus_data, 'String', 'Ready');
 
 guidata(hObject, handles)
+
 
 
 function missionnameEditText_Callback(hObject, eventdata, handles)
@@ -950,6 +1020,32 @@ function loadButton_Callback(hObject, eventdata, handles)
 dd = load(handles.missionToLoad);
 handles.myhandle = dd.myhandle;
 
+mswitch = findobj('Tag','matlabsolver');
+
+handles.myhandle.mswitch = (get(mswitch, 'Value'));
+
+cswitch = findobj('Tag','cplusplussolver');
+
+handles.myhandle.cswitch = (get(cswitch, 'Value'));
+
+if handles.myhandle.cswitch == 1
+    handles.myhandle.mswitch = (get(mswitch, 'Value'));
+    handles.myhandle.cswitch = (get(cswitch, 'Value'));
+else
+    handles.myhandle.mswitch = (get(mswitch, 'Value'));
+    handles.myhandle.cswitch = (get(cswitch, 'Value'));
+end
+
+% T = findobj('Tag', 'edit8');
+ C = findobj('Tag', 'edit9');
+% handles.myhandle.T = (get(T, 'Value'));
+ handles.myhandle.C = str2num((get(C, 'String')));
+
+% N_ext_obs = get(handles.nobsPopupmenu, 'Value')-1;
+% handles.myhandle.N_ext_obs = N_ext_obs;
+
+
+
 % EDIT DISPLAY
 % load map_name into pop_up
 maps = get(handles.mapPopupmenu, 'String');
@@ -963,7 +1059,7 @@ set(handles.ndronesPopupmenu, 'value', handles.myhandle.N_drones);
 set(handles.ngoalsPopupmenu, 'value', numel(handles.myhandle.goal));
 
 % load # of ext_obs
-set(handles.nobsPopupmenu, 'value', numel(handles.myhandle.ext_blocks(:,1)));
+set(handles.nobsPopupmenu, 'value', numel(handles.myhandle.ext_blocks(:,1))+1);
 
 % load Horizon
 set(handles.horizonEditText, 'String', handles.myhandle.Horizon);
@@ -971,8 +1067,10 @@ set(handles.horizonEditText, 'String', handles.myhandle.Horizon);
 % load Samp. Freq
 set(handles.samplingEditText, 'String', handles.myhandle.sampling_time);
 
+
 % % load Time BTW waypoints
-% set(handles.edit8, 'String', handles.myhandle.T);
+ set(handles.edit8, 'String', handles.myhandle.T);
+ set(handles.edit9, 'String', handles.myhandle.C);
 
 % load drone min sep
 set(handles.dminEditText, 'String', handles.myhandle.d_min);
@@ -1099,3 +1197,40 @@ function latex_Mission_Table_tag_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to latex_Mission_Table_tag (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+function matlabsolver_Callback(hObject, eventdata, handles)
+% hObject    handle to matlabsolver (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of matlabsolver
+if hObject.String == 'Matlab Solver' | handles.myhandle.cswitch == 1
+    handles.myhandle.mswitch = 1;
+     handles.myhandle.cswitch = 0;
+else
+    handles.myhandle.mswitch = 0;
+end
+disp('Updated to Matlab Solver');
+handles = updateEnvironment(handles);
+guidata(hObject, handles)
+
+
+% --- Executes on button press in cplusplussolver.
+function cplusplussolver_Callback(hObject, eventdata, handles)
+% hObject    handle to cplusplussolver (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of cplusplussolver
+if handles.myhandle.mswitch == 0
+    disp('detected');
+end
+if hObject.String == 'C++ Solver' | handles.myhandle.mswitch == 1
+    handles.myhandle.cswitch = 1;
+    handles.myhandle.mswitch = 0;
+else
+    handles.myhandle.cswitch = 0;
+end
+disp('Updated to C++ Solver');
+handles = updateEnvironment(handles);
+guidata(hObject, handles)
