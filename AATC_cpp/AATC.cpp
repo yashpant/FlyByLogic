@@ -1002,7 +1002,7 @@ void AATC::formulateMission(){
   vector<double> lbw, ubw, lbv, ubv, lbg, ubg, lbq, ubq;
 
   // define map bounds -- INPUT
-  double lmapX = -5, lmapY = -5, lmapZ = -0, umapX = 5, umapY = 5, umapZ = 5;
+  double lmapX = -2, lmapY = -2, lmapZ = 0.2, umapX = 2, umapY = 2, umapZ = 2.5;
 
   MX pCur, pPrev, vCur, vPrev, dp, foo, mCons, vf;
   double dv = 0, da = 0, maxVel = 20, maxAcc = 20; 

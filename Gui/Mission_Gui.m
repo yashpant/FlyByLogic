@@ -900,6 +900,26 @@ if handles.myhandle.cswitch == 1
             continue;
         elseif strfind(line,'w_opt')
             handles.myhandle.w_opt = str2num(line(8:end));
+            w_opt = handles.myhandle.w_opt;
+            ndrones = handles.myhandle.N_drones;
+            
+            N = numel(w_opt);
+            pos_vel = reshape(w_opt, N/2, 2);
+            pos = pos_vel(:,1);
+            vel = pos_vel(:,1);
+            
+           positions = reshape(pos, (N/2)/ndrones, ndrones);
+           velocities = reshape(vel, (N/2)/ndrones, ndrones);
+           
+           for i=1:ndrones
+               n = numel(positions(:,i));
+               p = reshape(positions(:,i), 3, n/3)';
+               v = reshape(velocities(:,i), 3, n/3)';
+               
+               generate_waypoints([p v]', ['default',num2str(i),'.yaml'],'w')
+           end
+            
+           
             continue;
         elseif strfind(line,'Time Taken')
             handles.myhandle.time_taken = str2num(line(13:end-10));
