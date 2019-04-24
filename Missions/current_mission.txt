@@ -1,34 +1,51 @@
 Printing Mission Details
 *******************************
 
-Number of Drones     :  2
+Number of Drones     :  4
 Number of Obstacles  :  1
 Number of Obstacles  :  1
 Number of Obstacles  :  1
-Number of Goals      :  1
+Number of Goals      :  2
 Waypoint Interval    :  1.00 (s)
 Time step            :  0.05 (s)
-Mission Horizon      :  8.00 (s)
+Mission Horizon      :  24.00 (s)
 Minimum Separation   :  0.25 (m)
 
 Initial Positions and limits
 -----------------------
 Drone#  : [x0, y0, z0, v_max, a_max]
-Drone0  : [-1.50, 0.50, 1.00, 2.00, 2.00]
-Drone1  : [-1.50, -0.50, 1.00, 2.00, 2.00]
+Drone0  : [-1.50, -0.50, 1.00, 2.00, 2.00]
+Drone1  : [-1.50, 0.50, 1.00, 2.00, 2.00]
+Drone2  : [1.50, -0.50, 1.00, 2.00, 2.00]
+Drone3  : [1.50, 0.50, 1.00, 2.00, 2.00]
 
 Obstacles
 -----------------------
 Obstacle#  : [lbx, lby, lbz, ubx, uby, ubz]
-Obstacle0  : [-1.00, -1.00, 0.00, 1.00, 1.00, 1.00]
+Obstacle0  : [-0.50, -0.50, 0.00, 0.50, 0.50, 1.50]
 
 Goals
 -----------------------
 Goal#  : [lbx, lby, lbz, ubx, uby, ubz]
-Goal0  : [1.50, -0.25, 0.25, 2.00, 0.25, 0.75]
+Goal0  : [1.00, 1.00, 1.00, 1.50, 1.50, 1.50]
+Goal1  : [-1.50, -1.50, 1.00, -1.00, -1.00, 1.50]
 
 Goal Intervals
 -----------------------
 Spec#  : [Drone#, Goal#, iStart, iEnd]
-Spec0  : [0, 0, 0, 8]
-Spec1  : [1, 0, 0, 8]
+Spec0  : [0, 0, 0, 6]
+Spec1  : [0, 0, 12, 18]
+Spec2  : [0, 1, 6, 12]
+Spec3  : [0, 1, 18, 24]
+Spec4  : [1, 0, 0, 6]
+Spec5  : [1, 0, 12, 18]
+Spec6  : [1, 1, 6, 12]
+Spec7  : [1, 1, 18, 24]
+Spec8  : [2, 0, 6, 12]
+Spec9  : [2, 0, 18, 24]
+Spec10  : [2, 1, 0, 6]
+Spec11  : [2, 1, 12, 18]
+Spec12  : [3, 0, 6, 12]
+Spec13  : [3, 0, 18, 24]
+Spec14  : [3, 1, 0, 6]
+Spec15  : [3, 1, 12, 18]
