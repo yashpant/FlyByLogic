@@ -1,0 +1,12 @@
+Requires Casadi c++ to be compiled (and run make install on it)
+In a terminal, run:
+
+cmake .
+make
+
+This compiles the binaries that are needed. Then, before running the tool, run:
+
+export LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6" (add this command to bashrc to avoid doing this everytime)
+
+Run matlab. Navigate to the GUI folder, and run the GUI file from there. For the pre-loaded example, click on plan mission. Once the status is ready, click on Plot Mission. 
+

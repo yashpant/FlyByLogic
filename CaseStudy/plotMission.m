@@ -1,4 +1,15 @@
 function rob = plotMission(handles)
+videomode=0; % record a video
+showtrajs=1; %lines for trajs
+
+if(videomode)
+    % video stuff
+    v = VideoWriter('mission.avi');
+    v.FrameRate = 20;
+    %v.CompressionRatio = 2;
+    v.Quality = 100;
+    open(v);
+end
 
 w_opt = handles.myhandle.w_opt;
 optParams = handles.myhandle.optParams;
@@ -40,8 +51,10 @@ p = [];
 for d = 1:optParams.N_drones
     
     hold on;
-    p(d) = plot3(xx(:,d),yy(:,d),zz(:,d),'-.','linewidth',3, 'Color', col{d}, 'DisplayName', strcat('Drone',num2str(d)));
-%     hold all;
+    if(showtrajs)
+        p(d) = plot3(xx(:,d),yy(:,d),zz(:,d),'-.','linewidth',3, 'Color', col{d}, 'DisplayName', strcat('Drone',num2str(d)));
+    end
+    %     hold all;
 end
 
 
@@ -57,6 +70,21 @@ for t = 1:size(xx,1)
     end
     set(time_print, 'String', sprintf('%.3f',(t-1)*optParams.sampling_time));
     t_ = toc;
-%     pause(0.02);
+    %     pause(0.02);
     pause(optParams.sampling_time - t_);
+    
+    if(videomode)
+        frame = getframe(gcf);
+        writeVideo(v,frame);
+    end
+end
+
+if(videomode)
+    for i = 1:ceil(1/optParams.sampling_time) %pause a second
+        %         myavi = addframe(myavi,gca);
+        frame = getframe(gcf);
+        writeVideo(v,frame);
+    end
+    close(v);
+    disp('fin');
 end
