@@ -1,13 +1,14 @@
 function rob = plotMission(handles)
 videomode=0; % record a video
-showtrajs=1; %lines for trajs
+showtrajs=0; %lines for trajs
 
 if(videomode)
     % video stuff
-    v = VideoWriter('mission.avi');
+    v = VideoWriter('RA.avi');
     v.FrameRate = 20;
     %v.CompressionRatio = 2;
     v.Quality = 100;
+    %v.CompressionRatio = 1;
     open(v);
 end
 
