@@ -1,4 +1,6 @@
 function [robustness, robustness_smooth] = alwEv(states, P, I, J, C)
+rob = zeros(length(I), 1);
+rob_smooth = zeros(length(I), 1);
 for i = 1:length(I)
     % i: time point in which we check 'eventually'
     % I may start with 0, since it is time increments, steps in the future
