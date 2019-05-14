@@ -11,15 +11,22 @@ function robustness_smooth = eventuallyAlways(states, P, I, J, C)
 %outputs:
 % robustness_smooth, the smooth robustness value 
 
-ap_robustness = zeros(size(states, 1), 1);
+import casadi.*
+if(isfloat(states))
+    ap_robustness = zeros(size(states, 1), 1);
+    r = zeros(length(I), 1);
+else
+    ap_robustness = MX.zeros(size(states, 1), 1);
+    r = MX.zeros(length(I), 1);
+end
+%% find atomic proposition (ap) robustness 
 lb = I(1)+J(1);
 ub = I(end)+J(end);
 for i = lb:ub 
     t = 1+i;
     ap_robustness(t) = inP(states(t, :), P, C);
 end
-
-r = zeros(length(I), 1);
+%% find formula robustness
 for i = 1:length(I) 
     r(i) = SmoothMin(ap_robustness(1+I(i)+J), C);
 end
