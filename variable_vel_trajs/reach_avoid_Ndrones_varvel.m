@@ -76,6 +76,8 @@ if(0) %rand init of quads
     
 end
 
+hold on;
+plot3(p0(1, 1:N_drones), p0(2, 1:N_drones), p0(3, 1:N_drones), 'b*');
 %init vels (zero)
 v0 = zeros(3,N_drones);
 
@@ -101,6 +103,7 @@ optParams.max_vel = max_vel;
 optParams.max_per_axis = max_per_axis;
 optParams.obs_lb_N = repmat(obs{1}.lb,Nsteps+1,1);
 optParams.obs_ub_N = repmat(obs{1}.ub,Nsteps+1,1);
+optParams.obs = Polyhedron('lb',obs{1}.lb,'ub',obs{1}.ub);
 optParams.goal.goal_lb_N = repmat(goal.lb',Nsteps+1,1);
 optParams.goal.goal_ub_N = repmat(goal.ub',Nsteps+1,1);
 optParams.N_drones = N_drones;
@@ -229,8 +232,8 @@ for i = 1:N_drones
     vv0 = [vv0;tempv];
     pos0{i} = reshape(temp,3,H_formula+1);
     vel0{i} = reshape(tempv,3,H_formula+1);
-    %hold all;
-    %plot3(pos0{i}(1,:),pos0{i}(2,:),pos0{i}(3,:),'-.');
+    hold all;
+    plot3(pos0{i}(1,:),pos0{i}(2,:),pos0{i}(3,:),'-.');
 end
 
 var0 = [w0;vv0];
