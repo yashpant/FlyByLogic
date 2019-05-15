@@ -834,6 +834,7 @@ if handles.myhandle.cswitch == 1
     fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
     fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);
     fprintf(fileID,'Minimum Separation   :  %4.2f (m)\n', handles.myhandle.d_min);
+    fprintf(fileID,'Map boundary         :  [%4.2f, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f]\n', handles.myhandle.map.boundary);
     
     fprintf(fileID, '\nInitial Positions and limits\n');
     fprintf(fileID, '-----------------------\n');

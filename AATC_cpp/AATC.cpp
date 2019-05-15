@@ -17,6 +17,7 @@ bool AATC::loadMission(string filename){
   vector<vector<double>> obs;
   vector<vector<double>> goal;
   vector<vector<double>> droneGoal;
+  vector<double> map_boundary;
 
   // open mission file 
   inFile.open(filename);
@@ -81,6 +82,17 @@ bool AATC::loadMission(string filename){
     if ((line.rfind("Waypoint Interval")!=string::npos)){
       i = line.find(":");
       optParams.T = stof(line.substr(i+1));
+      continue;
+    }
+
+    if ((line.rfind("Map boundary")!=string::npos)){
+      line = line.substr(1+line.find("["));
+      cout << "i:"<< i << endl;
+      std::string::size_type sz;
+      for (int j = 0; j < 6; j++){
+        map_boundary.push_back(stof(line, &sz));
+        line = line.substr(sz+1);  
+      }
       continue;
     }
 
@@ -163,6 +175,7 @@ bool AATC::loadMission(string filename){
   optParams.npt = optParams.T/optParams.h;
   optParams.goal = goal;
   optParams.obs = obs;
+  optParams.map_boundary = map_boundary;
   optParams.p0 = p0;
   optParams.v0 = v0;
   optParams.v_bounds =v_bounds;
@@ -172,6 +185,7 @@ bool AATC::loadMission(string filename){
   // cout << "initial pos : " << p0 << endl;
   // cout << "obs : " << obs << endl;
   // cout << "goals : " << goal << endl;
+  // cout << "map_boundary : " << optParams.map_boundary << endl;
 
   inFile.close();
 
@@ -1002,7 +1016,16 @@ void AATC::formulateMission(){
   vector<double> lbw, ubw, lbv, ubv, lbg, ubg, lbq, ubq;
 
   // define map bounds -- INPUT
-  double lmapX = -2, lmapY = -2, lmapZ = 0.2, umapX = 2, umapY = 2, umapZ = 2.5;
+  double lmapX = optParams.map_boundary[0];
+  double lmapY = optParams.map_boundary[1];
+  double lmapZ = optParams.map_boundary[2];
+
+  double umapX = optParams.map_boundary[3];
+  double umapY = optParams.map_boundary[4];
+  double umapZ = optParams.map_boundary[5];  
+  // sainty check
+  cout<< "optParams.map_boundary low: ["<< lmapX<<", "<<lmapY<<", "<<lmapZ<<"]"<<endl;
+  cout<< "optParams.map_boundary up : ["<< umapX<<", "<<umapY<<", "<<umapZ<<"]"<<endl;
 
   MX pCur, pPrev, vCur, vPrev, dp, foo, mCons, vf;
   double dv = 0, da = 0, maxVel = 20, maxAcc = 20; 

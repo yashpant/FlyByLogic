@@ -24,6 +24,7 @@ struct missionStruct {
     vector<vector<double>> p0;          // initial positions of drones
     vector<vector<double>> v0;          // initial velocities of drones
     vector<vector<double>> v_bounds;    // bounds on velocities and accelerations of drones
+    vector<double> map_boundary;
 
     DM M;                               // min jerk trajectory spline charateristic matrix
     DM A;                               // for distributed implementation (experimental)
