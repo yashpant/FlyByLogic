@@ -3,7 +3,7 @@
 
 %clc;
 close all;clear all;
-N_drones = 2;
+N_drones = 4;
 import casadi.*
 addpath('../MiscFunctions');
 addpath('../Maps_mrsl');

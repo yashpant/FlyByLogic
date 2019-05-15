@@ -112,57 +112,41 @@ for d = 1:optParams.N_drones
         
     end
     
+    states = [xx(:,d), yy(:,d), zz(:,d)];
+    % SPECIFY FORMULA FOR THE OBSTACLE HERE
     % always not unsafe in x y z
-    rho_lb_xx = xx(:,d)-optParams.obs_lb_N(:,1);
-    rho_ub_xx = optParams.obs_ub_N(:,1)-xx(:,d);
-    %rho_xx = SmoothMin([rho_lb_xx;rho_ub_xx],C);
+    rho_unsafe(d) = alwaysNot(1, states, optParams.obs, 0:numel(dT)*optParams.H_formula, C);
     
-    rho_lb_yy = yy(:,d)-optParams.obs_lb_N(:,2);
-    rho_ub_yy = optParams.obs_ub_N(:,2)-yy(:,d);
-    %rho_yy = SmoothMin([rho_lb_yy;rho_ub_yy],C);
+    % SPECIFY FORMULA FOR THE GOAL HERE
+    % Option 1: eventually goal in x y z
+%     I = 0:numel(dT)*optParams.H_formula;
+%     rho_goal(d) = eventually(1, states, optParams.goal.poly, I, C); 
     
-    rho_lb_zz = zz(:,d)-optParams.obs_lb_N(:,3);
-    rho_ub_zz = optParams.obs_ub_N(:,3)-zz(:,d);
-    %rho_zz = SmoothMin([rho_lb_zz;rho_ub_zz],C);
+    % Option 2: always eventually (reach the goal and let other drones to reach it too == leave it)
+%     % check that I+J <= H_formula specified in the head file! 
+%     Ia = 0; % in seconds
+%     Ib = 1; % also seconds
+%     Ja = 0; % seconds
+%     Jb = 5;
+%     I = Ia*numel(dT):Ib*numel(dT); % convertation to time-steps (needed for MTL formulas)
+%     J = Ja*numel(dT):Jb*numel(dT);
+%     rho_goal(d) = alwaysEventually(states, optParams.goal.poly, I, J, C);
     
-    if(type_of)
-        temp = zeros(numel(rho_lb_xx),1);
-    else
-        %temp = MX.sym('temp',numel(rho_lb_xx),1);
-        temp = MX.zeros(numel(rho_lb_xx),1);
-
-    end
-    
-    % make this more efficient
-    for i = 1:numel(rho_lb_xx)
-        temp_vec = [rho_lb_xx(i) rho_ub_xx(i) rho_lb_yy(i) rho_ub_yy(i) ...
-            rho_lb_zz(i) rho_ub_zz(i)];
-        temp(i) = SmoothMin(temp_vec,C);
-        
-    end
-    rho_unsafe(d) = SmoothMin(-temp,C);
-    
-    %rho_unsafe = SmoothMin([rho_xx;rho_yy;rho_zz],C);
-    
-    % eventually goal in x y z
-    rho_lb_xx = xx(:,d)-optParams.goal.goal_lb_N(:,1);
-    rho_ub_xx = optParams.goal.goal_ub_N(:,1)-xx(:,d);
-    rho_lb_yy = yy(:,d)-optParams.goal.goal_lb_N(:,2);
-    rho_ub_yy = optParams.goal.goal_ub_N(:,2)-yy(:,d);
-    rho_lb_zz = zz(:,d)-optParams.goal.goal_lb_N(:,3);
-    rho_ub_zz = optParams.goal.goal_ub_N(:,3)-zz(:,d);
-    
-    
-    % make this more efficient
-    for i = 1:numel(rho_lb_xx)
-        temp_vec = [rho_lb_xx(i) rho_ub_xx(i) rho_lb_yy(i) rho_ub_yy(i) ...
-            rho_lb_zz(i) rho_ub_zz(i)];
-        temp(i) = SmoothMin(temp_vec,C);
-        
-    end
-    rho_goal(d) = SmoothMax(temp,C1);
-    
-    %negative_rob = -SmoothMin([rho_unsafe;rho_goal],C);
+    % Option 3: eventually always
+    % RESULTS: one can see that final points are not in the goal, but it is
+    % still SAT the spec, because some of the drones on second 2 reached
+    % the goal and stayed there for one sec, and other reached the goal
+    % later (when first drones already left the goal) and stayed there for
+    % 1 second. 
+    %
+    % check that I+J <= H_formula specified in the head file!
+    Ia = 0; % in seconds
+    Ib = 5; % also seconds
+    Ja = 0; % seconds
+    Jb = 1;
+    I = Ia*numel(dT):Ib*numel(dT); % convertation to time-steps (needed for MTL formulas)
+    J = Ja*numel(dT):Jb*numel(dT);
+    rho_goal(d) = eventuallyAlways(states, optParams.goal.poly, I, J, C);
 end
 
 % pairwise distances
