@@ -588,6 +588,13 @@ int AATC::getIndex(float t){
 }
 
 template <typename T>
+T AATC::smoothMinVec(T x, double c){
+  // return the vector of smooth min of a vector
+  int m = x.size2();
+  return -log(mtimes(exp(-c*x),T::ones(m,1)))/c;
+}
+
+template <typename T>
 T AATC::smoothMin(T x, double c){
   //cout << "C : " << c << endl;
   // return the smooth min of a vector
@@ -597,7 +604,6 @@ T AATC::smoothMin(T x, double c){
   // return log(exp(x).transpose()*MX::ones(size))
   return -log(dot(mtimes(exp(-c*x),T::ones(m,1)), T::ones(n,1)))/c;
 }
-
 
 template <typename T>
 T AATC::smoothMax(T x, double c){
@@ -609,23 +615,20 @@ T AATC::smoothMax(T x, double c){
 }
 
 template <typename T>
-T AATC::smoothMinMax(T x, double c){
-  // return the smooth max of a vector
-  int n = x.size1();
-  int m = x.size2();
-  
-  T minVec = -log(mtimes(exp(-c*x),T::ones(m,1)))/c;
-  return smoothMax(minVec);
-}
-
-template <typename T>
-T AATC::smoothMinMin(T x, double c){
-  // return the smooth max of a vector
-  int n = x.size1();
-  int m = x.size2();
-  
-  T minVec = -log(mtimes(exp(-c*x),T::ones(m,1)))/c;
-  return smoothMin(-minVec);
+T AATC::inSet(T xx, T yy, T zz, vector<double> set){
+  // xx is of size T x 1
+  // yy is of size T x 1
+  // zz is of size T x 1
+  // set is of size 1 x 6
+  // compute distance of drone from set at each point
+  vector<T> temp;
+  temp.push_back(xx-set[0]);
+  temp.push_back(yy-set[1]);
+  temp.push_back(zz-set[2]);
+  temp.push_back(set[3]-xx);
+  temp.push_back(set[4]-yy);
+  temp.push_back(set[5]-zz);
+  return horzcat(temp);
 }
 
 template <typename T>
@@ -634,61 +637,33 @@ T AATC::always_in(T xx, T yy, T zz, vector<double> set){
   // xx is of size T x 1
   // yy is of size T x 1
   // zz is of size T x 1
-  // obs is of size 1 x 6
-
-  vector<T> temp;
-
-  // compute distance of drone from set at each point
-  temp.push_back(xx-set[0]);
-  temp.push_back(yy-set[1]);
-  temp.push_back(zz-set[2]);
-  temp.push_back(set[3]-xx);
-  temp.push_back(set[4]-yy);
-  temp.push_back(set[5]-zz);
-
-  return smoothMin(horzcat(temp));
+  // set is of size 1 x 6
+  T temp = inSet(xx, yy, zz, set);
+  return smoothMin(temp);
 }
 
 template <typename T>
 T AATC::always_not_in(T xx, T yy, T zz, vector<double> set){
-  // return the robustness of a path always in a set
+  // return the robustness of a path always not in a set
   // xx is of size T x 1
   // yy is of size T x 1
   // zz is of size T x 1
-  // obs is of size 1 x 6
-
-  vector<T> temp;
-
-  // compute distance of drone from set at each point
-  temp.push_back(xx-set[0]);
-  temp.push_back(yy-set[1]);
-  temp.push_back(zz-set[2]);
-  temp.push_back(set[3]-xx);
-  temp.push_back(set[4]-yy);
-  temp.push_back(set[5]-zz);
-
-  return smoothMinMin(horzcat(temp));
+  // set is of size 1 x 6
+  T temp = inSet(xx, yy, zz, set);
+  T minVec = smoothMinVec(temp);
+  return smoothMin(-minVec);
 }
 
 template <typename T>
 T AATC::eventually_in(T xx, T yy, T zz, vector<double> set){
-  // return the robustness of a path always in a set
+  // return the robustness of a path eventually in a set
   // xx is of size T x 1
   // yy is of size T x 1
   // zz is of size T x 1
-  // obs is of size 1 x 6
-
-  vector<T> temp;
-
-  // compute distance of drone from set at each point
-  temp.push_back(xx-set[0]);
-  temp.push_back(yy-set[1]);
-  temp.push_back(zz-set[2]);
-  temp.push_back(set[3]-xx);
-  temp.push_back(set[4]-yy);
-  temp.push_back(set[5]-zz);
-
-  return smoothMinMax(horzcat(temp));
+  // set is of size 1 x 6
+  T temp = inSet(xx, yy, zz, set);
+  T minVec = smoothMinVec(temp);
+  return smoothMax(minVec);
 }
 
 template <typename T>
@@ -1244,8 +1219,8 @@ void AATC::solveCentralized(){
   // set options for nlp optimization solver
   //***********************************************************
   Dict Opts, ipoptOpts;
-  ipoptOpts["linear_solver"] = "ma27";    // using HSL routines
-  ipoptOpts["print_level"] = 0;
+  //ipoptOpts["linear_solver"] = "ma27";    // using HSL routines
+  ipoptOpts["print_level"] = 5;
   ipoptOpts["acceptable_tol"] = 1e-6;
   ipoptOpts["tol"] = 1e-6;
   ipoptOpts["max_iter"] = 5000;

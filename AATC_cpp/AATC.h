@@ -72,18 +72,17 @@ class AATC {
         int getIndex(float t);
 
         template <typename T>
-        T smoothMin(T x, double c=C);
+        T smoothMinVec(T x, double c=C);
 
+        template <typename T>
+        T smoothMin(T x, double c=C);
 
         template <typename T>
         T smoothMax(T x, double c=C);
 
         template <typename T>
-        T smoothMinMax(T x, double c=C);
-
-        template <typename T>
-        T smoothMinMin(T x, double c=C);
-
+        T inSet(T xx, T yy, T zz, vector<double> set);
+        
         template <typename T>
         T always_in(T xx, T yy, T zz, vector<double> set);
 
