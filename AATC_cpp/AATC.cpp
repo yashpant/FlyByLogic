@@ -628,7 +628,8 @@ T AATC::inSet(T xx, T yy, T zz, vector<double> set){
   temp.push_back(set[3]-xx);
   temp.push_back(set[4]-yy);
   temp.push_back(set[5]-zz);
-  return horzcat(temp);
+  //perform min over coordinates
+  return smoothMinVec(horzcat(temp));
 }
 
 template <typename T>
@@ -650,8 +651,7 @@ T AATC::always_not_in(T xx, T yy, T zz, vector<double> set){
   // zz is of size T x 1
   // set is of size 1 x 6
   T temp = inSet(xx, yy, zz, set);
-  T minVec = smoothMinVec(temp);
-  return smoothMin(-minVec);
+  return smoothMin(-temp);
 }
 
 template <typename T>
@@ -662,40 +662,54 @@ T AATC::eventually_in(T xx, T yy, T zz, vector<double> set){
   // zz is of size T x 1
   // set is of size 1 x 6
   T temp = inSet(xx, yy, zz, set);
-  T minVec = smoothMinVec(temp);
-  return smoothMax(minVec);
+  return smoothMax(temp);
 }
 
 template <typename T>
 T AATC::always_eventually(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
-  // STL formula
-  // ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
-
-  // return the robustness of a path always eventually in a set
-  // xx is of size T x 1
-  // yy is of size T x 1
-  // zz is of size T x 1
-  // obs is of size 1 x 6
-
+  // STL formula: ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
+  // Rhudi's version
   vector<T> temp;
   T x, y, z;
-
-  float t = 0,dt = optParams.h;
-
   // start and end indices
   int iS, iE;
-  for (t = a; t <= b; t += dt){
+  float t, dt = optParams.h;
+  for (t = a; t <= b+(dt/10); t += dt){
     iS = getIndex(t+c);
     iE = getIndex(t+d);
-
     // extract trajectory path
-    x = xx(Slice(iS, iE));
-    y = yy(Slice(iS, iE));
-    z = zz(Slice(iS, iE));
-    
+    x = xx(Slice(iS, iE+1));
+    y = yy(Slice(iS, iE+1));
+    z = zz(Slice(iS, iE+1));
     temp.push_back(eventually_in(x, y, z, set));
   }
+  return smoothMin(vertcat(temp));
+}
 
+template <typename T>
+T AATC::always_eventually_alena(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
+  // STL formula: ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
+  // Alena's version
+  vector<T> temp;
+  T x, y, z;
+  float dt = optParams.h;
+  T ap, apInJ;
+  int lenI = getIndex(b)-getIndex(a)+1;
+  int lenJ = getIndex(d)-getIndex(c)+1;
+  int indL = getIndex(a+c);
+  int indU = getIndex(b+d);
+
+  x = xx(Slice(indL, indU+1));
+  y = yy(Slice(indL, indU+1));
+  z = zz(Slice(indL, indU+1));
+  ap = inSet(x, y, z, set);
+  //cout<<"ap size "<<ap.size1()<<endl;
+
+  for (int i=0; i<lenI; i++){  
+    apInJ = ap(Slice(i, i+lenJ));
+    // perform EVENTUALLY
+    temp.push_back(smoothMax(apInJ));
+  }
   return smoothMin(vertcat(temp));
 }
 
@@ -812,8 +826,17 @@ T AATC::goalRob(T xx, T yy, T zz, vector<vector<double>> goal, vector<vector<dou
       z = zz(Slice(iS, iE),i);
 
       //cout << goal(k) << endl;
-      out.push_back(eventually_in(x, y, z, goal[k]));
-
+      // OPTION 1: EVENTUALLY
+      //out.push_back(eventually_in(x, y, z, goal[k]));
+      
+      // OPTION 2: ALWAYS EVENTUALLY (constantly cycle loops around the goal)
+      float a = 1.0;
+      float b = 8.0;
+      float c = 0.0;
+      float d = 1.95;
+      out.push_back(always_eventually(x, y, z, goal[k], a, b, c, d));
+      //out.push_back(always_eventually_alena(x, y, z, goal[k], a, b, c, d));
+  
       // cout << "j :" << j << endl;
       if(j < droneGoal.size()-1){
         j++;
@@ -955,6 +978,7 @@ void AATC::missionRob(in_type var){
   }
 
   in_type rob =  smoothMin(vertcat(rho_unsafe, rho_goal, rho_sep));
+  cout<<"Final rob = "<< rob<<endl;
   
   if (typeid(rob).name() == typeid(MX).name()){
     mxOut.rob = (MX) rob;
@@ -999,8 +1023,8 @@ void AATC::formulateMission(){
   double umapY = optParams.map_boundary[4];
   double umapZ = optParams.map_boundary[5];  
   // sainty check
-  cout<< "optParams.map_boundary low: ["<< lmapX<<", "<<lmapY<<", "<<lmapZ<<"]"<<endl;
-  cout<< "optParams.map_boundary up : ["<< umapX<<", "<<umapY<<", "<<umapZ<<"]"<<endl;
+  //cout<< "optParams.map_boundary low: ["<< lmapX<<", "<<lmapY<<", "<<lmapZ<<"]"<<endl;
+  //cout<< "optParams.map_boundary up : ["<< umapX<<", "<<umapY<<", "<<umapZ<<"]"<<endl;
 
   MX pCur, pPrev, vCur, vPrev, dp, foo, mCons, vf;
   double dv = 0, da = 0, maxVel = 20, maxAcc = 20; 
@@ -1147,10 +1171,10 @@ void AATC::formulateMission(){
 
   cout << "Got Initial Solution" << endl;
   
-  // cout << endl;
-  // cout << "-----------------------------------------------------" << endl;
-  // cout << "x0 = " << init_res.at("x") << ";" << endl;
-  // cout << "-----------------------------------------------------" << endl;
+  //cout << endl;
+  //cout << "-----------------------------------------------------" << endl;
+  //cout << "x0 = " << init_res.at("x") << ";" << endl;
+  //cout << "-----------------------------------------------------" << endl;
   //*******************************************************************************
 
   // Setup [elements] of (cost function) --> (a*[robustness] + b*[trajectory length])
