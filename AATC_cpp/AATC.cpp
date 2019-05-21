@@ -678,6 +678,7 @@ T AATC::always_eventually(T xx, T yy, T zz, vector<double> set, float a, float b
     iS = getIndex(t+c);
     iE = getIndex(t+d);
     // extract trajectory path
+    // [iS, iE] bounds should be included, that is why use iE+1
     x = xx(Slice(iS, iE+1));
     y = yy(Slice(iS, iE+1));
     z = zz(Slice(iS, iE+1));
@@ -699,6 +700,7 @@ T AATC::always_eventually_alena(T xx, T yy, T zz, vector<double> set, float a, f
   int indL = getIndex(a+c);
   int indU = getIndex(b+d);
 
+  // [iS, iE] bounds should be included, that is why use iE+1
   x = xx(Slice(indL, indU+1));
   y = yy(Slice(indL, indU+1));
   z = zz(Slice(indL, indU+1));
@@ -723,26 +725,24 @@ T AATC::eventually_always(T xx, T yy, T zz, vector<double> set, float a, float b
   // yy is of size T x 1
   // zz is of size T x 1
   // obs is of size 1 x 6
-
+  
   vector<T> temp;
   T x, y, z;
-
   float dt = optParams.h;
 
   // start and end indices
   int iS, iE;
-  for (float t = a; t <= b; t += dt){
+  for (float t = a; t <= b+(dt/10); t += dt){
     iS = getIndex(t+c);
     iE = getIndex(t+d);
 
     // extract trajectory path
-    x = xx(Slice(iS, iE));
-    y = yy(Slice(iS, iE));
-    z = zz(Slice(iS, iE));
-    
+    // [iS, iE] bounds should be included, that is why use iE+1
+    x = xx(Slice(iS, iE+1));
+    y = yy(Slice(iS, iE+1));
+    z = zz(Slice(iS, iE+1));
     temp.push_back(always_in(x, y, z, set));
   }
-
   return smoothMax(vertcat(temp));
 }
 
@@ -830,12 +830,20 @@ T AATC::goalRob(T xx, T yy, T zz, vector<vector<double>> goal, vector<vector<dou
       //out.push_back(eventually_in(x, y, z, goal[k]));
       
       // OPTION 2: ALWAYS EVENTUALLY (constantly cycle loops around the goal)
-      float a = 1.0;
+      /*float a = 1.0;
       float b = 8.0;
       float c = 0.0;
       float d = 1.95;
-      out.push_back(always_eventually(x, y, z, goal[k], a, b, c, d));
+      */
+      //out.push_back(always_eventually(x, y, z, goal[k], a, b, c, d));
       //out.push_back(always_eventually_alena(x, y, z, goal[k], a, b, c, d));
+
+      // OPTION 3: EVENTUALLY ALWAYS (reach the goal in [a,b]time and stay there for [c d]time)
+      float a = 1.0;
+      float b = 8.0;
+      float c = 0.0;
+      float d = 2.5;
+      out.push_back(eventually_always(x, y, z, goal[k], a, b, c, d));
   
       // cout << "j :" << j << endl;
       if(j < droneGoal.size()-1){
