@@ -667,7 +667,7 @@ T AATC::eventually_in(T xx, T yy, T zz, vector<double> set){
 
 template <typename T>
 T AATC::always_eventually(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
-  // STL formula: ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
+  // STL formula: ALWAYS [a, b] EVENTUALLY [c, b] BE_in_SET
   // Rhudi's version
   vector<T> temp;
   T x, y, z;
@@ -689,7 +689,7 @@ T AATC::always_eventually(T xx, T yy, T zz, vector<double> set, float a, float b
 
 template <typename T>
 T AATC::always_eventually_alena(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
-  // STL formula: ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
+  // STL formula: ALWAYS [a, b] EVENTUALLY [c, b] BE_in_SET
   // Alena's version
   vector<T> temp;
   T x, y, z;
@@ -718,7 +718,7 @@ T AATC::always_eventually_alena(T xx, T yy, T zz, vector<double> set, float a, f
 template <typename T>
 T AATC::eventually_always(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
   // STL formula
-  // ALWAYS (a, b) EVENTUALLY (c, b) BE_in_SET
+  // EVENTUALLY [a, b] ALWAYS [c, b] BE_in_SET
 
   // return the robustness of a path always eventually in a set
   // xx is of size T x 1
@@ -742,6 +742,34 @@ T AATC::eventually_always(T xx, T yy, T zz, vector<double> set, float a, float b
     y = yy(Slice(iS, iE+1));
     z = zz(Slice(iS, iE+1));
     temp.push_back(always_in(x, y, z, set));
+  }
+  return smoothMax(vertcat(temp));
+}
+
+template <typename T>
+T AATC::eventually_always_alena(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d){
+  // STL formula: EVENTUALLY [a, b] ALWAYS [c, b] BE_in_SET
+  // Alena's version
+  vector<T> temp;
+  T x, y, z;
+  float dt = optParams.h;
+  T ap, apInJ;
+  int lenI = getIndex(b)-getIndex(a)+1;
+  int lenJ = getIndex(d)-getIndex(c)+1;
+  int indL = getIndex(a+c);
+  int indU = getIndex(b+d);
+
+  // [iS, iE] bounds should be included, that is why use iE+1
+  x = xx(Slice(indL, indU+1));
+  y = yy(Slice(indL, indU+1));
+  z = zz(Slice(indL, indU+1));
+  ap = inSet(x, y, z, set);
+  //cout<<"ap size "<<ap.size1()<<endl;
+
+  for (int i=0; i<lenI; i++){  
+    apInJ = ap(Slice(i, i+lenJ));
+    // perform EVENTUALLY
+    temp.push_back(smoothMin(apInJ));
   }
   return smoothMax(vertcat(temp));
 }
@@ -843,7 +871,7 @@ T AATC::goalRob(T xx, T yy, T zz, vector<vector<double>> goal, vector<vector<dou
       float b = 8.0;
       float c = 0.0;
       float d = 2.5;
-      out.push_back(eventually_always(x, y, z, goal[k], a, b, c, d));
+      out.push_back(eventually_always_alena(x, y, z, goal[k], a, b, c, d));
   
       // cout << "j :" << j << endl;
       if(j < droneGoal.size()-1){

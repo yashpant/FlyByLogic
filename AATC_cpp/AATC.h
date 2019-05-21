@@ -102,6 +102,9 @@ class AATC {
         T eventually_always(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d);
 
         template <typename T>
+        T eventually_always_alena(T xx, T yy, T zz, vector<double> set, float a, float b, float c, float d);
+
+        template <typename T>
         T unsafeRob(T xx, T yy, T zz, vector<vector<double>> obs);
 
         template <typename T>
