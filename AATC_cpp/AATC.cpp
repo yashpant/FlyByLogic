@@ -712,6 +712,7 @@ T AATC::always_eventually_alena(T xx, T yy, T zz, vector<double> set, float a, f
     // perform EVENTUALLY
     temp.push_back(smoothMax(apInJ));
   }
+  // perform ALWAYS
   return smoothMin(vertcat(temp));
 }
 
@@ -768,9 +769,10 @@ T AATC::eventually_always_alena(T xx, T yy, T zz, vector<double> set, float a, f
 
   for (int i=0; i<lenI; i++){  
     apInJ = ap(Slice(i, i+lenJ));
-    // perform EVENTUALLY
+    // perform ALWAYS
     temp.push_back(smoothMin(apInJ));
   }
+  // perform EVENTUALLY
   return smoothMax(vertcat(temp));
 }
 
