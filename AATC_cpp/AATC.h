@@ -2,8 +2,6 @@
 #include <eigen3/Eigen/Eigen>
 #include <time.h>
 
-#define C 50.0
-
 using namespace casadi;
 using namespace std;
 using namespace Eigen;
@@ -21,6 +19,7 @@ struct missionStruct {
     float k2t;                          // spline constant 2
     int npt;                            // waypoints per time interval
     float T;                            // time interval between major waypoints
+    float C;
     vector<vector<double>> p0;          // initial positions of drones
     vector<vector<double>> v0;          // initial velocities of drones
     vector<vector<double>> v_bounds;    // bounds on velocities and accelerations of drones
@@ -72,13 +71,13 @@ class AATC {
         int getIndex(float t);
 
         template <typename T>
-        T smoothMinVec(T x, double c=C);
+        T smoothMinVec(T x);
 
         template <typename T>
-        T smoothMin(T x, double c=C);
+        T smoothMin(T x);
 
         template <typename T>
-        T smoothMax(T x, double c=C);
+        T smoothMax(T x);
 
         template <typename T>
         T inSet(T xx, T yy, T zz, vector<double> set);

@@ -830,6 +830,7 @@ if handles.myhandle.cswitch == 1
     fprintf(fileID,'Number of Drones     :  %d\n', handles.myhandle.N_drones);
     fprintf(fileID,'Number of Obstacles  :  %d\n', size(handles.myhandle.obs),1);
     fprintf(fileID,'Number of Goals      :  %d\n', length(handles.myhandle.goal));
+    fprintf(fileID,'Smooth constant      :  %d\n', handles.myhandle.C);
     fprintf(fileID,'Waypoint Interval    :  %4.2f (s)\n', handles.myhandle.T);
     fprintf(fileID,'Time step            :  %4.2f (s)\n', handles.myhandle.sampling_time);
     fprintf(fileID,'Mission Horizon      :  %4.2f (s)\n', handles.myhandle.Horizon);

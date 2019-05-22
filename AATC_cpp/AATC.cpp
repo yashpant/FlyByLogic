@@ -85,6 +85,12 @@ bool AATC::loadMission(string filename){
       continue;
     }
 
+    if ((line.rfind("Smooth constant")!=string::npos)){
+      i = line.find(":");
+      optParams.C = stoi(line.substr(i+1));
+      continue;
+    }
+
     if ((line.rfind("Map boundary")!=string::npos)){
       line = line.substr(1+line.find("["));
       cout << "i:"<< i << endl;
@@ -588,30 +594,29 @@ int AATC::getIndex(float t){
 }
 
 template <typename T>
-T AATC::smoothMinVec(T x, double c){
+T AATC::smoothMinVec(T x){
   // return the vector of smooth min of a vector
   int m = x.size2();
-  return -log(mtimes(exp(-c*x),T::ones(m,1)))/c;
+  return -log(mtimes(exp(-optParams.C*x),T::ones(m,1)))/optParams.C;
 }
 
 template <typename T>
-T AATC::smoothMin(T x, double c){
-  //cout << "C : " << c << endl;
+T AATC::smoothMin(T x){
+  //cout << "C : " << optParams.C << endl;
   // return the smooth min of a vector
   int n = x.size1();
   int m = x.size2();
-
   // return log(exp(x).transpose()*MX::ones(size))
-  return -log(dot(mtimes(exp(-c*x),T::ones(m,1)), T::ones(n,1)))/c;
+  return -log(dot(mtimes(exp(-optParams.C*x),T::ones(m,1)), T::ones(n,1)))/optParams.C;
 }
 
 template <typename T>
-T AATC::smoothMax(T x, double c){
+T AATC::smoothMax(T x){
   // return the smooth max of a vector
   int n = x.size1();
   int m = x.size2();
 
-  return log(dot(mtimes(exp(c*x),T::ones(m,1)), T::ones(n,1)))/c;
+  return log(dot(mtimes(exp(optParams.C*x),T::ones(m,1)), T::ones(n,1)))/optParams.C;
 }
 
 template <typename T>
@@ -860,21 +865,25 @@ T AATC::goalRob(T xx, T yy, T zz, vector<vector<double>> goal, vector<vector<dou
       //out.push_back(eventually_in(x, y, z, goal[k]));
       
       // OPTION 2: ALWAYS EVENTUALLY (constantly cycle loops around the goal)
-      /*float a = 1.0;
-      float b = 8.0;
-      float c = 0.0;
-      float d = 1.95;
-      */
-      //out.push_back(always_eventually(x, y, z, goal[k], a, b, c, d));
-      //out.push_back(always_eventually_alena(x, y, z, goal[k], a, b, c, d));
-
-      // OPTION 3: EVENTUALLY ALWAYS (reach the goal in [a,b]time and stay there for [c d]time)
       float a = 1.0;
       float b = 8.0;
       float c = 0.0;
+      float d = 1.95;
+      out.push_back(always_eventually(x, y, z, goal[k], a, b, c, d));
+      //out.push_back(always_eventually_alena(x, y, z, goal[k], a, b, c, d));
+
+      // OPTION 3: EVENTUALLY ALWAYS (reach the goal in [a,b]time and stay there for [c d]time)
+      /*float a = 1.0;
+      float b = 8.0;
+      float c = 0.0;
       float d = 2.5;
+      cout<<"a_ind = "<<getIndex(a)<<endl;
+      cout<<"b_ind = "<<getIndex(b)<<endl;
+      cout<<"c_ind = "<<getIndex(c)<<endl;
+      cout<<"d_ind = "<<getIndex(d)<<endl;
       out.push_back(eventually_always_alena(x, y, z, goal[k], a, b, c, d));
-  
+      */  
+
       // cout << "j :" << j << endl;
       if(j < droneGoal.size()-1){
         j++;
