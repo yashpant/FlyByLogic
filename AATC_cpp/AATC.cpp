@@ -584,13 +584,10 @@ ArrayXXi AATC::getPairCombos(int N){
 }
 
 int AATC::getIndex(float t){
-  //cout << "t : " << t << endl;
-  //cout << "npt : " << optParams.npt << endl;
   if (t >= optParams.Horizon){
-    return (int) floor(optParams.Horizon * optParams.npt - 1);
+    return (int) floor(optParams.Horizon / optParams.h);
   }
-  // cout << "hey" << endl;
-  return (int) (t*optParams.npt);
+  return (int) (t / optParams.h);
 }
 
 template <typename T>
