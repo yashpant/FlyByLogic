@@ -356,7 +356,6 @@ map_cell = get(handles.mapPopupmenu, 'String');
 handles.myhandle.map_name = map_cell{get(handles.mapPopupmenu, 'Value')};
 
 handles = updateEnvironment(handles);
-
 guidata(hObject, handles)
 
 
@@ -474,7 +473,7 @@ guidata(hObject, handles)
 
 function handles = updateEnvironment(handles)
 % Plot the environment on the figure
-
+disp('updated env');
 % Bring up desired axes
 axes(handles.disp_axes); hold on;
 cla;
@@ -491,6 +490,15 @@ view(AZ,EL);
 
 handles.myhandle.map = map;
 handles.myhandle.obs = obs;
+
+if false %to make a vector pdf of the gui in this state
+ fig= gcf;
+ fig.InvertHardcopy = 'off';
+ fig.PaperPositionMode = 'manual';
+ orient(fig,'landscape')
+ %set(fig,'PaperPositionMode','auto');
+ print(fig,'-dpdf','test_gui.pdf')
+end
 
 
 function horizonEditText_Callback(hObject, eventdata, handles)
