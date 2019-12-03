@@ -3,10 +3,11 @@
 
 %clc;
 close all;clear all;
-N_drones = 4;
+N_drones = 2;
 import casadi.*
 addpath('../MiscFunctions');
 addpath('../Maps_mrsl');
+addpath(genpath('../SmoothRobustness'));
 %%
 disp('Initializing...');
 map_name = 'Maps_mrsl/map0.txt';
