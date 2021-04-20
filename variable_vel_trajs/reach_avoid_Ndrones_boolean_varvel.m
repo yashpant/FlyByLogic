@@ -93,6 +93,7 @@ optParams.max_vel = max_vel;
 optParams.max_per_axis = max_per_axis;
 optParams.obs_lb_N = repmat(obs{1}.lb,Nsteps+1,1);
 optParams.obs_ub_N = repmat(obs{1}.ub,Nsteps+1,1);
+optParams.obs = Polyhedron('lb',obs{1}.lb,'ub',obs{1}.ub);
 optParams.goal.goal_lb_N = repmat(goal.lb',Nsteps+1,1);
 optParams.goal.goal_ub_N = repmat(goal.ub',Nsteps+1,1);
 optParams.N_drones = N_drones;

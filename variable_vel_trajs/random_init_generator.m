@@ -17,6 +17,7 @@ nRects = numel(FreeSpace);
 ubs = zeros(nRects,3)';
 lbs = zeros(nRects,3)';
 for j = 1:nRects
+    FreeSpace(j).minHRep;
     lbs(:,j) = FreeSpace(j).Internal.lb;
     ubs(:,j) = FreeSpace(j).Internal.ub;
     
